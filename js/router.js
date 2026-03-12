@@ -158,8 +158,31 @@ document.addEventListener('DOMContentLoaded', async () => {
 
 if ('serviceWorker' in navigator) {
   window.addEventListener('load', () => {
-    navigator.serviceWorker.register('sw.js')
-      .then(reg => console.log('Service Worker registered', reg))
-      .catch(err => console.error('Service Worker registration failed', err));
+    navigator.serviceWorker.register('sw.js').then(reg => {
+      console.log('Service Worker registered');
+      
+      // Check for updates on every load
+      reg.update();
+
+      reg.onupdatefound = () => {
+        const installingWorker = reg.installing;
+        installingWorker.onstatechange = () => {
+          if (installingWorker.state === 'installed' && navigator.serviceWorker.controller) {
+            // New version available! Since sw.js calls skipWaiting(), 
+            // the new worker will activate and trigger 'controllerchange'
+            console.log('New version found, updating...');
+          }
+        };
+      };
+    }).catch(err => console.error('Service Worker registration failed', err));
+
+    // Reload the page when the new service worker takes over
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      if (!refreshing) {
+        refreshing = true;
+        window.location.reload();
+      }
+    });
   });
 }
