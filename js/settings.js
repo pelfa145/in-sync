@@ -44,6 +44,12 @@ function initSettings() {
     applyTheme();
 
     themeBubbles.forEach(bubble => {
+        // Set active class on load
+        if (bubble.dataset.theme === AppState.activeTheme) {
+            themeBubbles.forEach(b => b.classList.remove('active'));
+            bubble.classList.add('active');
+        }
+
         bubble.addEventListener('click', () => {
             themeBubbles.forEach(b => b.classList.remove('active'));
             bubble.classList.add('active');
@@ -53,7 +59,7 @@ function initSettings() {
             applyTheme();
             
             document.querySelectorAll('.theme-bubble').forEach(b => {
-                b.innerHTML = bubble === b ? '✓' : '\u00A0';
+                b.innerHTML = b.classList.contains('active') ? '✓' : '\u00A0';
             });
         });
     });
@@ -133,4 +139,8 @@ async function handleSignOut() {
     }
 }
 
-document.addEventListener('appReady', initSettings);
+if (window.AppStateReady) {
+    initSettings();
+} else {
+    document.addEventListener('appReady', initSettings);
+}

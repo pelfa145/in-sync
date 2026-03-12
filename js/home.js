@@ -1,4 +1,6 @@
 let memoriesUnsubscribe = null;
+let commentsUnsubscribe = null;
+let activeMemoryId = null;
 
 function initHome() {
     const menuBtn = document.getElementById('menu-btn');
@@ -19,11 +21,38 @@ function initHome() {
 
     menuBtn.addEventListener('click', () => navigateTo('settings.html'));
     messagesBtn.addEventListener('click', () => navigateTo('chat.html'));
-    fab.addEventListener('click', () => navigateTo('new-memory.html'));
+    fab.addEventListener('click', () => {
+        // Check quantity limit for free users
+        if (!AppState.isPremium && AppState.memories.length >= 3) {
+            alert('You have reached the free limit of 3 memories. Please upgrade to Premium to add more!');
+            navigateTo('paywall.html');
+            return;
+        }
+        navigateTo('new-memory.html');
+    });
 
     if (modalBackdrop) modalBackdrop.addEventListener('click', closeModal);
     if (modalClose) modalClose.addEventListener('click', closeModal);
     if (mediaViewerClose) mediaViewerClose.addEventListener('click', closeMediaViewer);
+
+    const saveMediaBtn = document.getElementById('modal-save-media');
+    if (saveMediaBtn) {
+        saveMediaBtn.addEventListener('click', handleSaveMedia);
+    }
+
+    const commentInput = document.getElementById('comment-input');
+    const commentSendBtn = document.getElementById('comment-send-btn');
+    if (commentInput && commentSendBtn) {
+        commentInput.addEventListener('input', () => {
+            commentSendBtn.disabled = !commentInput.value.trim();
+        });
+        commentInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter' && !commentSendBtn.disabled) {
+                handleSendComment();
+            }
+        });
+        commentSendBtn.addEventListener('click', handleSendComment);
+    }
 
     loadMemories();
 }
@@ -161,21 +190,49 @@ function openMemoryModal(memory) {
     const modalDesc = document.getElementById('modal-desc');
     const modalAuthorAvatar = document.getElementById('modal-author-avatar');
     const modalAuthorName = document.getElementById('modal-author-name');
+    const commentInput = document.getElementById('comment-input');
+    const commentsList = document.getElementById('comments-list');
+    const saveMediaBtn = document.getElementById('modal-save-media');
 
     if (!modal) return;
+
+    activeMemoryId = memory.id;
+    if (commentInput) commentInput.value = '';
+    if (commentsList) commentsList.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">Loading comments...</p>';
+
+    // Subscribe to comments
+    if (commentsUnsubscribe) commentsUnsubscribe();
+    commentsUnsubscribe = subscribeComments(memory.id, (comments) => {
+        renderComments(comments);
+    });
 
     const isMe = memory.userId === AppState.currentUser?.id;
     const authorName = isMe ? 'You' : AppState.partner?.name;
 
-    if (memory.uri && (memory.type === 'photo' || memory.type === 'video')) {
+    if (memory.uri && (memory.type === 'photo' || memory.type === 'video' || memory.type === 'audio' || memory.type === 'song')) {
+        if (saveMediaBtn) {
+            saveMediaBtn.style.display = 'block';
+            saveMediaBtn.dataset.url = memory.uri;
+            saveMediaBtn.dataset.type = memory.type;
+            saveMediaBtn.dataset.title = memory.title;
+        }
+
         if (memory.type === 'video') {
             modalMedia.innerHTML = `<video src="${memory.uri}" controls></video>`;
-        } else {
+        } else if (memory.type === 'photo') {
             modalMedia.innerHTML = `<img src="${memory.uri}" alt="${memory.title}">`;
+        } else {
+            const typeIcons = {
+                audio: '🎙️',
+                song: '🎵',
+            };
+            modalMedia.innerHTML = `<span style="font-size: 64px;">${typeIcons[memory.type] || '📝'}</span><audio src="${memory.uri}" controls style="width: 100%; margin-top: 20px;"></audio>`;
         }
-        modalMedia.style.cursor = 'pointer';
-        modalMedia.onclick = () => openMediaViewer(memory);
+        modalMedia.style.cursor = memory.type === 'photo' ? 'pointer' : 'default';
+        modalMedia.onclick = memory.type === 'photo' ? () => openMediaViewer(memory) : null;
     } else {
+        if (saveMediaBtn) saveMediaBtn.style.display = 'none';
+        
         const typeIcons = {
             photo: '📸',
             video: '🎬',
@@ -209,7 +266,108 @@ function closeModal() {
     if (modal) {
         modal.classList.add('hidden');
     }
+    if (commentsUnsubscribe) {
+        commentsUnsubscribe();
+        commentsUnsubscribe = null;
+    }
+    activeMemoryId = null;
 }
+
+async function handleSaveMedia(e) {
+    const btn = e.target;
+    const url = btn.dataset.url;
+    const type = btn.dataset.type;
+    const title = btn.dataset.title || 'InSync_Media';
+
+    if (!url) return;
+
+    const originalText = btn.textContent;
+    btn.textContent = 'Downloading...';
+    btn.disabled = true;
+
+    try {
+        await downloadFile(url, `${title}_${Date.now()}`);
+    } catch (err) {
+        console.error('Download failed:', err);
+        alert('Failed to download media. Please try again.');
+    } finally {
+        btn.textContent = originalText;
+        btn.disabled = false;
+    }
+}
+
+async function downloadFile(url, filename) {
+    const response = await fetch(url);
+    const blob = await response.blob();
+    const blobUrl = window.URL.createObjectURL(blob);
+    
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    
+    // Detect extension from content type
+    let ext = 'bin';
+    if (blob.type.includes('image/jpeg')) ext = 'jpg';
+    else if (blob.type.includes('image/png')) ext = 'png';
+    else if (blob.type.includes('video/mp4')) ext = 'mp4';
+    else if (blob.type.includes('audio/mpeg')) ext = 'mp3';
+    else if (blob.type.includes('audio/wav')) ext = 'wav';
+    else if (blob.type.includes('audio/')) ext = 'm4a';
+    
+    link.download = `${filename}.${ext}`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(blobUrl);
+}
+
+function renderComments(comments) {
+    const container = document.getElementById('comments-list');
+    if (!container) return;
+
+    if (comments.length === 0) {
+        container.innerHTML = '<p style="text-align: center; color: var(--text-secondary); padding: 20px;">No comments yet. Be the first!</p>';
+        return;
+    }
+
+    container.innerHTML = comments.map(comment => {
+        const isMe = comment.userId === AppState.currentUser?.id;
+        const authorName = isMe ? (AppState.currentUser?.name || 'You') : (AppState.partner?.name || 'Partner');
+        const initial = authorName[0] || '?';
+
+        return `
+            <div class="comment-item">
+                <div class="comment-avatar">${initial}</div>
+                <div class="comment-content">
+                    <span class="comment-author">${authorName}</span>
+                    <p class="comment-text">${escapeHtml(comment.text)}</p>
+                </div>
+            </div>
+        `;
+    }).join('');
+
+    container.scrollTop = container.scrollHeight;
+}
+
+async function handleSendComment() {
+    const input = document.getElementById('comment-input');
+    const btn = document.getElementById('comment-send-btn');
+    const text = input.value.trim();
+
+    if (!text || !activeMemoryId || !AppState.currentUser) return;
+
+    input.value = '';
+    btn.disabled = true;
+
+    try {
+        await addComment(activeMemoryId, AppState.currentUser.id, text);
+    } catch (e) {
+        console.error('Failed to add comment', e);
+        alert('Failed to send comment');
+        btn.disabled = false;
+        input.value = text;
+    }
+}
+
 
 function openMediaViewer(memory) {
     const viewer = document.getElementById('media-viewer');
@@ -253,4 +411,8 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-document.addEventListener('appReady', initHome);
+if (window.AppStateReady) {
+    initHome();
+} else {
+    document.addEventListener('appReady', initHome);
+}

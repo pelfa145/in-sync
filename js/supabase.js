@@ -5,6 +5,7 @@ const supabaseClient = window.supabase.createClient(supabaseUrl, supabaseAnonKey
 
 const THEMES = {
     pink: { name: 'Cherry Blossom', color: '#FF2D55' },
+    babyPink: { name: 'Baby Pink', color: '#F4C2C2' },
     blue: { name: 'Ocean Breeze', color: '#007AFF' },
     green: { name: 'Mint Leaf', color: '#34C759' },
     purple: { name: 'Lavender Night', color: '#AF52DE' },
@@ -298,3 +299,57 @@ function subscribeMessages(userId, partnerId, callback) {
         supabaseClient.removeChannel(channel);
     };
 }
+
+async function addComment(memoryId, userId, text) {
+    const { error } = await supabaseClient.from('memory_comments').insert([{
+        memory_id: memoryId,
+        user_id: userId,
+        text: text,
+    }]);
+    if (error) throw error;
+}
+
+function subscribeComments(memoryId, callback) {
+    supabaseClient
+        .from('memory_comments')
+        .select('*')
+        .eq('memory_id', memoryId)
+        .order('created_at', { ascending: true })
+        .then(({ data }) => {
+            if (data) {
+                callback(data.map(d => ({
+                    id: d.id,
+                    userId: d.user_id,
+                    text: d.text,
+                    createdAt: new Date(d.created_at).getTime(),
+                })));
+            }
+        });
+
+    const channel = supabaseClient
+        .channel(`comments:${memoryId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'memory_comments', filter: `memory_id=eq.${memoryId}` },
+        () => {
+            supabaseClient
+                .from('memory_comments')
+                .select('*')
+                .eq('memory_id', memoryId)
+                .order('created_at', { ascending: true })
+                .then(({ data }) => {
+                    if (data) {
+                        callback(data.map(d => ({
+                            id: d.id,
+                            userId: d.user_id,
+                            text: d.text,
+                            createdAt: new Date(d.created_at).getTime(),
+                        })));
+                    }
+                });
+        })
+        .subscribe();
+
+    return () => {
+        supabaseClient.removeChannel(channel);
+    };
+}
+

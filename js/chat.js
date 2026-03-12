@@ -92,7 +92,14 @@ function renderMessages() {
 function scrollToBottom() {
     const container = document.getElementById('chat-messages');
     if (container) {
-        container.scrollTop = container.scrollHeight;
+        // Use requestAnimationFrame to ensure the DOM has rendered the new messages
+        requestAnimationFrame(() => {
+            container.scrollTop = container.scrollHeight;
+            // Double check after a short delay for images/slow renders
+            setTimeout(() => {
+                container.scrollTop = container.scrollHeight;
+            }, 50);
+        });
     }
 }
 
@@ -129,4 +136,8 @@ function escapeHtml(text) {
     return div.innerHTML;
 }
 
-document.addEventListener('appReady', initChat);
+if (window.AppStateReady) {
+    initChat();
+} else {
+    document.addEventListener('appReady', initChat);
+}

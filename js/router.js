@@ -24,6 +24,14 @@ function showScreen(screenId) {
 function navigateTo(page, params = {}) {
     const targetPage = page.includes('.html') ? page : page + '.html';
     const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+    const pageKey = page.replace('.html', '');
+    const screenId = pageKey + (pageKey.endsWith('-screen') ? '' : '-screen');
+
+    // If the screen exists in the DOM, just show it
+    if (document.getElementById(screenId)) {
+        showScreen(screenId);
+        return;
+    }
     
     if (currentPage === targetPage) {
         return;
@@ -44,6 +52,14 @@ function applyTheme() {
     if (theme) {
         root.style.setProperty('--primary', theme.color);
         root.style.setProperty('--primary-light', theme.color + '15');
+    }
+}
+
+function lockOrientation() {
+    if (screen.orientation && screen.orientation.lock) {
+        screen.orientation.lock('portrait').catch(err => {
+            console.log('Orientation lock failed:', err.message);
+        });
     }
 }
 
@@ -104,6 +120,7 @@ async function initAppState() {
 
 // Automatically initialize on every page load
 document.addEventListener('DOMContentLoaded', async () => {
+    lockOrientation();
     await initAppState();
     
     // Listen for auth changes to handle logout/login in real-time
@@ -135,6 +152,7 @@ document.addEventListener('DOMContentLoaded', async () => {
     }
 
     // Dispatch event so other scripts know AppState is ready
+    window.AppStateReady = true;
     document.dispatchEvent(new CustomEvent('appReady'));
 });
 

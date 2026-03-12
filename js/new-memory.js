@@ -1,5 +1,6 @@
 let selectedType = 'photo';
 let selectedFile = null;
+let cameraStream = null;
 
 function initNewMemory() {
     const backBtn = document.getElementById('new-memory-back');
@@ -11,18 +12,40 @@ function initNewMemory() {
     const saveBtn = document.getElementById('save-memory-btn');
     const mediaSection = document.getElementById('media-section');
 
+    // Camera and Choice elements
+    const choiceCamera = document.getElementById('choice-camera');
+    const choiceGallery = document.getElementById('choice-gallery');
+    const choiceClose = document.getElementById('choice-close');
+    const choiceBackdrop = document.getElementById('choice-backdrop');
+    const cameraCaptureBtn = document.getElementById('camera-capture-btn');
+    const cameraBackBtn = document.getElementById('camera-back-btn');
+
     if (backBtn) {
         backBtn.addEventListener('click', () => navigateTo('home.html'));
     }
 
+    if (mediaPicker) {
+        mediaPicker.addEventListener('click', openMediaChoices);
+    }
+
+    if (choiceGallery) choiceGallery.addEventListener('click', () => {
+        closeMediaChoices();
+        fileInput.click();
+    });
+
+    if (choiceCamera) choiceCamera.addEventListener('click', () => {
+        closeMediaChoices();
+        startCamera();
+    });
+
+    if (choiceClose) choiceClose.addEventListener('click', closeMediaChoices);
+    if (choiceBackdrop) choiceBackdrop.addEventListener('click', closeMediaChoices);
+    
+    if (cameraCaptureBtn) cameraCaptureBtn.addEventListener('click', captureFromCamera);
+    if (cameraBackBtn) cameraBackBtn.addEventListener('click', stopCamera);
+
     if (!typeChips.length) return;
 
-    // Check quantity limit for free users
-    if (!AppState.isPremium && AppState.memories.length >= 3) {
-        alert('You have reached the free limit of 3 memories. Please upgrade to Premium to add more!');
-        navigateTo('paywall.html');
-        return;
-    }
 
     typeChips.forEach(chip => {
         const type = chip.dataset.type;
@@ -202,4 +225,87 @@ async function handleSave() {
     }
 }
 
-document.addEventListener('appReady', initNewMemory);
+function openMediaChoices() {
+    if (selectedType === 'photo' || selectedType === 'video') {
+        document.getElementById('media-choice-modal').classList.remove('hidden');
+    } else {
+        document.getElementById('file-input').click();
+    }
+}
+
+function closeMediaChoices() {
+    document.getElementById('media-choice-modal').classList.add('hidden');
+}
+
+async function startCamera() {
+    const cameraScreen = document.getElementById('camera-screen');
+    const video = document.getElementById('camera-video');
+    
+    try {
+        cameraStream = await navigator.mediaDevices.getUserMedia({ 
+            video: { facingMode: 'environment' }, 
+            audio: false 
+        });
+        video.srcObject = cameraStream;
+        cameraScreen.style.display = 'flex';
+    } catch (err) {
+        console.error('Camera access denied:', err);
+        alert('Could not access camera. Please check permissions.');
+    }
+}
+
+function stopCamera() {
+    const cameraScreen = document.getElementById('camera-screen');
+    const video = document.getElementById('camera-video');
+    
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+        cameraStream = null;
+    }
+    
+    video.srcObject = null;
+    cameraScreen.style.display = 'none';
+}
+
+function captureFromCamera() {
+    const video = document.getElementById('camera-video');
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    
+    const ctx = canvas.getContext('2d');
+    ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+    
+    canvas.toBlob((blob) => {
+        const file = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        
+        // Use existing handleFileSelect logic style
+        selectedFile = file;
+        const mediaPicker = document.getElementById('media-picker');
+        const mediaPreview = document.getElementById('media-preview');
+        const mediaPreviewImg = document.getElementById('media-preview-img');
+        const mediaAttached = document.getElementById('media-attached');
+        const mediaPickerContent = mediaPicker?.querySelector('.media-picker-content');
+
+        if (mediaPicker) mediaPicker.classList.add('has-media');
+        if (mediaPickerContent) mediaPickerContent.classList.add('hidden');
+
+        if (selectedType === 'photo') {
+            if (mediaPreview && mediaPreviewImg) {
+                mediaPreviewImg.src = URL.createObjectURL(file);
+                mediaPreview.classList.remove('hidden');
+            }
+        } else {
+            if (mediaAttached) mediaAttached.classList.remove('hidden');
+        }
+
+        updateSaveButton();
+        stopCamera();
+    }, 'image/jpeg', 0.8);
+}
+
+if (window.AppStateReady) {
+    initNewMemory();
+} else {
+    document.addEventListener('appReady', initNewMemory);
+}

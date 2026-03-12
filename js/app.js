@@ -110,4 +110,8 @@ function clearError() {
     }
 }
 
-document.addEventListener('appReady', initAuth);
+if (window.AppStateReady) {
+    initAuth();
+} else {
+    document.addEventListener('appReady', initAuth);
+}

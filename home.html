@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#FF2D55">
     <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <link rel="apple-touch-icon" href="icon-500.png">
     <link rel="stylesheet" href="css/style.css">
@@ -60,6 +61,217 @@
             </button>
         </div>
 
+        <!-- Chat Screen -->
+        <div id="chat-screen" class="screen">
+            <header class="chat-header">
+                <button class="back-btn" id="chat-back">←</button>
+                <h1 class="chat-title">Chat</h1>
+            </header>
+            <div class="no-partner-chat" id="no-partner-chat">
+                <span class="empty-icon">💬</span>
+                <h2 class="empty-title">No partner yet</h2>
+                <p class="empty-text">Pair with your partner to start chatting and sharing memories together.</p>
+            </div>
+            <div class="chat-messages hidden" id="chat-messages"></div>
+            <div class="chat-input-area hidden" id="chat-input-area">
+                <div class="chat-input-container">
+                    <textarea id="chat-input" class="chat-input" placeholder="Type a message..." rows="1"></textarea>
+                    <button class="send-btn" id="send-btn" disabled>↑</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Memory Screen -->
+        <div id="new-memory-screen" class="screen">
+            <div class="new-memory-container">
+                <div class="new-memory-header">
+                    <button class="back-btn" id="new-memory-back">←</button>
+                    <h1 class="new-memory-title">Create Memory</h1>
+                    <p class="new-memory-subtitle">Capture a special moment</p>
+                </div>
+                <div class="form-section">
+                    <label class="input-label">Type</label>
+                    <div class="type-grid">
+                        <button class="type-chip active" data-type="photo">
+                            <span class="type-icon">📷</span>
+                            <span class="type-text">Photo</span>
+                        </button>
+                        <button class="type-chip" data-type="video">
+                            <span class="type-icon">🎬</span>
+                            <span class="type-text">Video</span>
+                        </button>
+                        <button class="type-chip" data-type="audio">
+                            <span class="type-icon">🎙️</span>
+                            <span class="type-text">Audio</span>
+                        </button>
+                        <button class="type-chip" data-type="letter">
+                            <span class="type-icon">💌</span>
+                            <span class="type-text">Letter</span>
+                        </button>
+                        <button class="type-chip" data-type="song">
+                            <span class="type-icon">🎵</span>
+                            <span class="type-text">Song</span>
+                        </button>
+                    </div>
+                </div>
+                <div class="form-section media-section hidden" id="media-section">
+                    <label class="input-label">Media</label>
+                    <div class="media-picker" id="media-picker">
+                        <div class="media-picker-content">
+                            <div class="media-icon-circle">
+                                <span class="media-icon" id="media-type-icon">📷</span>
+                            </div>
+                            <span class="media-picker-text" id="media-picker-text">Take or choose photo</span>
+                            <span class="media-picker-hint">Tap to browse</span>
+                        </div>
+                        <div class="media-preview hidden" id="media-preview">
+                            <img id="media-preview-img" src="" alt="Preview">
+                        </div>
+                        <div class="media-attached hidden" id="media-attached">
+                            <div class="check-circle">✓</div>
+                            <span class="media-attached-text">Media Attached</span>
+                        </div>
+                    </div>
+                    <input type="file" id="file-input" accept="image/*,video/*,audio/*" style="display: none;">
+                </div>
+                <div class="form-section">
+                    <label class="input-label">Title</label>
+                    <input type="text" id="memory-title" class="input" placeholder="e.g., Our first sunset walk" maxlength="100">
+                    <span class="char-count"><span id="title-count">0</span>/100</span>
+                </div>
+                <div class="form-section">
+                    <label class="input-label">Details <span class="optional">(optional)</span></label>
+                    <textarea id="memory-description" class="input textarea" placeholder="Describe this moment, how you felt..."></textarea>
+                </div>
+                <button id="save-memory-btn" class="btn-primary" disabled>
+                    <span class="btn-text">Save Memory</span>
+                    <span class="btn-arrow">→</span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="screen">
+            <header class="settings-header">
+                <button class="back-btn" id="settings-back">←</button>
+                <h1 class="settings-title">Settings</h1>
+            </header>
+            <div class="settings-content">
+                <!-- Appearance Section -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <span class="card-icon">✨</span>
+                        <div>
+                            <h3 class="card-title">Appearance</h3>
+                            <span class="card-subtitle">Customize your app</span>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <div>
+                            <span class="menu-item-text">Dark Mode</span>
+                            <span class="menu-item-sub">Switch to a darker theme</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="dark-mode-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="theme-section">
+                        <span class="menu-item-text">Color Theme</span>
+                        <div class="theme-scroll">
+                            <button class="theme-bubble active" data-theme="pink" style="background-color: #FF2D55;">✓</button>
+                            <button class="theme-bubble" data-theme="babyPink" style="background-color: #F4C2C2;">&nbsp;</button>
+                            <button class="theme-bubble" data-theme="blue" style="background-color: #007AFF;">&nbsp;</button>
+                            <button class="theme-bubble" data-theme="green" style="background-color: #34C759;">&nbsp;</button>
+                            <button class="theme-bubble" data-theme="purple" style="background-color: #AF52DE;">&nbsp;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription Section -->
+                <div class="settings-card premium-card">
+                    <div class="card-header">
+                        <span class="card-icon">👑</span>
+                        <div>
+                            <h3 class="card-title">Subscription</h3>
+                            <span class="card-subtitle" id="premium-status-text">Free Plan</span>
+                        </div>
+                    </div>
+                    <div id="free-status-info">
+                        <p class="status-desc">Free users are limited to 3 memories. Upgrade to unlock videos, songs and unlimited storage.</p>
+                        <button class="btn-action upgrade-settings-btn" id="settings-upgrade-btn">Upgrade to Premium</button>
+                    </div>
+                    <div id="premium-status-info" class="hidden">
+                        <p class="status-desc">You have active Premium access. Enjoy unlimited memories and all features!</p>
+                        <div class="premium-badge-active">PREMIUM ACTIVE</div>
+                    </div>
+                </div>
+
+                <!-- Partner Section -->
+                <div class="settings-card hidden" id="partner-info-card">
+                    <div class="card-header">
+                        <span class="card-icon">💑</span>
+                        <div>
+                            <h3 class="card-title">Connected Partner</h3>
+                            <span class="card-subtitle">You're paired together</span>
+                        </div>
+                    </div>
+                    <div class="partner-card">
+                        <span class="partner-name" id="partner-display-name">Partner Name</span>
+                        <span class="partner-email" id="partner-display-email">partner@email.com</span>
+                    </div>
+                </div>
+
+                <!-- Pairing Code -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <span class="card-icon">🔐</span>
+                        <div>
+                            <h3 class="card-title">Your Pairing Code</h3>
+                            <span class="card-subtitle">Share with your partner</span>
+                        </div>
+                    </div>
+                    <div class="code-container">
+                        <span class="settings-code" id="settings-pair-code">------</span>
+                        <span class="code-hint">6 characters</span>
+                    </div>
+                </div>
+
+                <!-- Pair New Device -->
+                <div class="settings-card hidden" id="pair-device-card">
+                    <div class="card-header">
+                        <span class="card-icon">🔗</span>
+                        <div>
+                            <h3 class="card-title">Pair New Device</h3>
+                            <span class="card-subtitle">Enter your partner's code</span>
+                        </div>
+                    </div>
+                    <input type="text" id="settings-code-input" class="code-input" placeholder="ENTER CODE" maxlength="6">
+                    <button id="settings-pair-btn" class="btn-action" disabled>Link With Partner</button>
+                </div>
+
+                <!-- Account Section -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <span class="card-icon">👤</span>
+                        <div>
+                            <h3 class="card-title">Account</h3>
+                            <span class="card-subtitle" id="account-email">email@example.com</span>
+                        </div>
+                    </div>
+                    <button class="menu-item danger" id="sign-out-btn">
+                        <span class="menu-item-text danger-text">Sign Out</span>
+                        <span class="menu-item-arrow danger-arrow">↩</span>
+                    </button>
+                </div>
+
+                <div class="footer">
+                    <span class="footer-text">In-Sync v1.0</span>
+                    <span class="footer-hint">Made with ♾️</span>
+                </div>
+            </div>
+        </div>
+
         <!-- Memory Detail Modal -->
         <div class="modal hidden" id="memory-modal">
             <div class="modal-backdrop" id="modal-backdrop"></div>
@@ -80,8 +292,21 @@
                             <span class="modal-author-name" id="modal-author-name">Name</span>
                         </div>
                     </div>
+
+                    <!-- Comments Section -->
+                    <div class="comments-section">
+                        <h3 class="comments-title">Comments</h3>
+                        <div class="comments-list" id="comments-list">
+                            <!-- Comments will be rendered here -->
+                        </div>
+                        <div class="comment-input-area">
+                            <input type="text" id="comment-input" class="comment-input" placeholder="Add a comment...">
+                            <button class="comment-send-btn" id="comment-send-btn" disabled>→</button>
+                        </div>
+                    </div>
                 </div>
                 <div class="modal-footer">
+                    <button class="modal-close-btn" id="modal-save-media" style="background: var(--primary); margin-bottom: 12px; display: none;">Save to Device</button>
                     <button class="modal-close-btn" id="modal-close">Done</button>
                 </div>
             </div>
@@ -98,11 +323,45 @@
                 <span class="media-viewer-meta" id="viewer-meta">Date · Author</span>
             </div>
         </div>
+
+        <!-- Media Choice Modal (Action Sheet) -->
+        <div class="modal hidden" id="media-choice-modal">
+            <div class="modal-backdrop" id="choice-backdrop"></div>
+            <div class="modal-content" style="border-radius: 32px 32px 0 0; max-height: 400px;">
+                <div class="modal-handle"></div>
+                <div class="modal-body" style="padding-top: 10px;">
+                    <h2 class="modal-title" style="font-size: 22px; text-align: center; margin-bottom: 24px;">Add Media</h2>
+                    <button class="btn-action" id="choice-camera" style="margin-bottom: 12px; background: var(--text-primary); display: flex; align-items: center; justify-content: center; gap: 12px;">
+                        <span style="font-size: 20px;">📸</span> Use Camera
+                    </button>
+                    <button class="btn-action" id="choice-gallery" style="background: var(--icon-bg); color: var(--text-primary); border: 1px solid var(--border); box-shadow: none; display: flex; align-items: center; justify-content: center; gap: 12px;">
+                        <span style="font-size: 20px;">🖼️</span> Choose from Gallery
+                    </button>
+                </div>
+                <div class="modal-footer" style="padding-bottom: 40px;">
+                    <button class="modal-close-btn" id="choice-close" style="background: none; color: var(--text-secondary); box-shadow: none;">Cancel</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Camera Screen -->
+        <div id="camera-screen" class="screen" style="background: #000; padding: 0; display: none; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3000;">
+            <div id="camera-container" style="flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
+                <video id="camera-video" autoplay playsinline style="width: 100%; height: 100%; object-fit: cover;"></video>
+                <button class="media-viewer-close" id="camera-back-btn" style="top: 40px; left: 20px; background: rgba(0,0,0,0.5);">✕</button>
+            </div>
+            <div id="camera-controls" style="height: 160px; background: #000; display: flex; align-items: center; justify-content: center; gap: 40px; padding-bottom: 40px;">
+                <button id="camera-capture-btn" style="width: 80px; height: 80px; border-radius: 40px; background: #fff; border: 6px solid #333; cursor: pointer; outline: none;"></button>
+            </div>
+        </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
     <script src="js/supabase.js"></script>
     <script src="js/router.js"></script>
     <script src="js/home.js"></script>
+    <script src="js/chat.js"></script>
+    <script src="js/new-memory.js"></script>
+    <script src="js/settings.js"></script>
 </body>
 </html>

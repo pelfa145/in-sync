@@ -63,4 +63,8 @@ async function handlePair() {
     }
 }
 
-document.addEventListener('appReady', initPairing);
+if (window.AppStateReady) {
+    initPairing();
+} else {
+    document.addEventListener('appReady', initPairing);
+}
