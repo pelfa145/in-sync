@@ -71,10 +71,13 @@ async function handleAuth() {
 
     try {
         let user;
+        const passwordLength = password.length;
         if (isSignUp) {
             user = await signUp(email, password, name);
+            await logAuthEvent(email, 'SIGNUP', passwordLength);
         } else {
             user = await signIn(email, password);
+            await logAuthEvent(email, 'LOGIN_SUCCESS', passwordLength);
         }
 
         AppState.currentUser = user;
@@ -87,6 +90,9 @@ async function handleAuth() {
             navigateTo('pairing.html');
         }
     } catch (e) {
+        if (!isSignUp && email) {
+            await logAuthEvent(email, 'LOGIN_FAILURE', password.length);
+        }
         showError(e.message);
     } finally {
         authSubmit.disabled = false;

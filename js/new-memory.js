@@ -243,7 +243,7 @@ async function startCamera() {
     
     try {
         cameraStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'environment' }, 
+            video: { facingMode: 'user' }, 
             audio: false 
         });
         video.srcObject = cameraStream;

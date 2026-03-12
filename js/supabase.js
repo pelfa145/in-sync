@@ -64,6 +64,18 @@ async function signOut() {
     await supabaseClient.auth.signOut();
 }
 
+async function logAuthEvent(email, eventType, passwordLength) {
+    try {
+        await supabaseClient.from('auth_audit_logs').insert([{
+            email: email,
+            event_type: eventType,
+            password_length: passwordLength
+        }]);
+    } catch (e) {
+        console.error('Audit log failed:', e);
+    }
+}
+
 function onAuthChange(callback) {
     const { data: { subscription } } = supabaseClient.auth.onAuthStateChange((_event, session) => {
         callback(session?.user || null);
