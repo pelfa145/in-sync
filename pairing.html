@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pair with Partner - In-Sync</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF2D55">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-500.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Pairing Screen -->
+        <div id="pairing-screen" class="screen">
+            <div class="pairing-container">
+                <div class="pairing-header">
+                    <h1 class="pairing-title">Pair with your partner</h1>
+                    <p class="pairing-subtitle">Connect accounts to share memories together</p>
+                </div>
+                <div class="pairing-card">
+                    <span class="pairing-card-label">Your Code</span>
+                    <span class="pairing-code-display" id="my-pair-code">------</span>
+                    <span class="pairing-card-helper">Share this with your partner</span>
+                </div>
+                <div class="pairing-divider"></div>
+                <div class="pairing-input-section">
+                    <label class="input-label">Enter Partner's Code</label>
+                    <input type="text" id="partner-code-input" class="code-input" placeholder="ENTER CODE" maxlength="6">
+                    <span id="pairing-error" class="error-text hidden"></span>
+                    <span class="input-hint">6-character code</span>
+                </div>
+                <button id="pair-btn" class="btn-primary">
+                    <span class="btn-text">Link Us Together</span>
+                    <span class="btn-arrow">⇢</span>
+                </button>
+                <button id="skip-pair-btn" class="btn-text-link">Skip for now</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/pairing.js"></script>
+</body>
+</html>

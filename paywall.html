@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upgrade to Premium - In-Sync</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF2D55">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-500.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Paywall Screen -->
+        <div id="paywall-screen" class="screen">
+            <header class="paywall-header">
+                <button class="close-btn" id="paywall-close">✕</button>
+            </header>
+            <div class="paywall-content">
+                <div class="paywall-hero">
+                    <span class="paywall-icon">✨</span>
+                    <h1 class="paywall-title">Premium Access</h1>
+                    <p class="paywall-subtitle">Capture your love story without limits.</p>
+                </div>
+
+                <div class="plans-container">
+                    <div class="plan-card featured-gcash">
+                        <div class="best-value">MOST POPULAR</div>
+                        <div class="plan-header">
+                            <h3 class="plan-name">Premium Monthly</h3>
+                            <div class="plan-price-row">
+                                <span class="currency">₱</span>
+                                <span class="price-value">40</span>
+                                <span class="period">/mo</span>
+                            </div>
+                        </div>
+                        <ul class="plan-features">
+                            <li class="feature available">Unlimited Memories Storage</li>
+                            <li class="feature available">Unlock Videos & Songs</li>
+                            <li class="feature available">High Quality Media</li>
+                            <li class="feature available">Priority Support</li>
+                        </ul>
+                        
+                        <div class="payment-method-hint">
+                            <span>Pay with</span>
+                            <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/GCash_logo.svg/2560px-GCash_logo.svg.png" alt="GCash" class="gcash-logo-small">
+                        </div>
+
+                        <button class="btn-gcash" id="upgrade-btn">
+                            <span class="btn-text">Subscribe via GCash</span>
+                            <span class="btn-arrow">→</span>
+                        </button>
+                    </div>
+                </div>
+
+                <div class="free-limit-info">
+                    <p>Current: <strong>Free Plan</strong> (Limit: 3 Memories)</p>
+                </div>
+
+                <p class="disclaimer">Cancel anytime. Secure payment via GCash.</p>
+            </div>
+        </div>
+
+        <!-- GCash Mock Payment Modal -->
+        <div class="modal hidden" id="gcash-modal">
+            <div class="modal-backdrop"></div>
+            <div class="modal-content gcash-checkout">
+                <div class="gcash-modal-header">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/5/59/GCash_logo.svg/2560px-GCash_logo.svg.png" alt="GCash" class="gcash-logo-modal">
+                </div>
+                <div class="gcash-modal-body">
+                    <h2 class="checkout-title">Checkout</h2>
+                    <div class="checkout-amount">₱40.00</div>
+                    <p class="checkout-desc">Subscription for In-Sync Premium</p>
+                    
+                    <div class="input-group">
+                        <label class="input-label">GCash Number</label>
+                        <input type="tel" class="input" placeholder="09XX XXX XXXX" id="gcash-number">
+                    </div>
+                    
+                    <button class="btn-gcash-full" id="confirm-payment-btn">Pay ₱40.00</button>
+                    <button class="btn-text-link" id="cancel-payment-btn">Cancel</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/paywall.js"></script>
+</body>
+</html>

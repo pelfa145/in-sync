@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Settings - In-Sync</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF2D55">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-500.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Settings Screen -->
+        <div id="settings-screen" class="screen">
+            <header class="settings-header">
+                <button class="back-btn" id="settings-back">←</button>
+                <h1 class="settings-title">Settings</h1>
+            </header>
+            <div class="settings-content">
+                <!-- Appearance Section -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <span class="card-icon">✨</span>
+                        <div>
+                            <h3 class="card-title">Appearance</h3>
+                            <span class="card-subtitle">Customize your app</span>
+                        </div>
+                    </div>
+                    <div class="menu-item">
+                        <div>
+                            <span class="menu-item-text">Dark Mode</span>
+                            <span class="menu-item-sub">Switch to a darker theme</span>
+                        </div>
+                        <label class="switch">
+                            <input type="checkbox" id="dark-mode-toggle">
+                            <span class="slider"></span>
+                        </label>
+                    </div>
+                    <div class="theme-section">
+                        <span class="menu-item-text">Color Theme</span>
+                        <div class="theme-scroll">
+                            <button class="theme-bubble active" data-theme="pink" style="background-color: #FF2D55;">✓</button>
+                            <button class="theme-bubble" data-theme="blue" style="background-color: #007AFF;">&nbsp;</button>
+                            <button class="theme-bubble" data-theme="green" style="background-color: #34C759;">&nbsp;</button>
+                            <button class="theme-bubble" data-theme="purple" style="background-color: #AF52DE;">&nbsp;</button>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Subscription Section -->
+                <div class="settings-card premium-card">
+                    <div class="card-header">
+                        <span class="card-icon">👑</span>
+                        <div>
+                            <h3 class="card-title">Subscription</h3>
+                            <span class="card-subtitle" id="premium-status-text">Free Plan</span>
+                        </div>
+                    </div>
+                    <div id="free-status-info">
+                        <p class="status-desc">Free users are limited to 3 memories. Upgrade to unlock videos, songs and unlimited storage.</p>
+                        <button class="btn-action upgrade-settings-btn" id="settings-upgrade-btn">Upgrade to Premium</button>
+                    </div>
+                    <div id="premium-status-info" class="hidden">
+                        <p class="status-desc">You have active Premium access. Enjoy unlimited memories and all features!</p>
+                        <div class="premium-badge-active">PREMIUM ACTIVE</div>
+                    </div>
+                </div>
+
+                <!-- Partner Section -->
+                <div class="settings-card hidden" id="partner-info-card">
+                    <div class="card-header">
+                        <span class="card-icon">💑</span>
+                        <div>
+                            <h3 class="card-title">Connected Partner</h3>
+                            <span class="card-subtitle">You're paired together</span>
+                        </div>
+                    </div>
+                    <div class="partner-card">
+                        <span class="partner-name" id="partner-display-name">Partner Name</span>
+                        <span class="partner-email" id="partner-display-email">partner@email.com</span>
+                    </div>
+                </div>
+
+                <!-- Pairing Code -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <span class="card-icon">🔐</span>
+                        <div>
+                            <h3 class="card-title">Your Pairing Code</h3>
+                            <span class="card-subtitle">Share with your partner</span>
+                        </div>
+                    </div>
+                    <div class="code-container">
+                        <span class="settings-code" id="settings-pair-code">------</span>
+                        <span class="code-hint">6 characters</span>
+                    </div>
+                </div>
+
+                <!-- Pair New Device -->
+                <div class="settings-card hidden" id="pair-device-card">
+                    <div class="card-header">
+                        <span class="card-icon">🔗</span>
+                        <div>
+                            <h3 class="card-title">Pair New Device</h3>
+                            <span class="card-subtitle">Enter your partner's code</span>
+                        </div>
+                    </div>
+                    <input type="text" id="settings-code-input" class="code-input" placeholder="ENTER CODE" maxlength="6">
+                    <button id="settings-pair-btn" class="btn-action" disabled>Link With Partner</button>
+                </div>
+
+                <!-- Account Section -->
+                <div class="settings-card">
+                    <div class="card-header">
+                        <span class="card-icon">👤</span>
+                        <div>
+                            <h3 class="card-title">Account</h3>
+                            <span class="card-subtitle" id="account-email">email@example.com</span>
+                        </div>
+                    </div>
+                    <button class="menu-item danger" id="sign-out-btn">
+                        <span class="menu-item-text danger-text">Sign Out</span>
+                        <span class="menu-item-arrow danger-arrow">↩</span>
+                    </button>
+                </div>
+
+                <div class="footer">
+                    <span class="footer-text">In-Sync v1.0</span>
+                    <span class="footer-hint">Made with ♾️</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/settings.js"></script>
+</body>
+</html>

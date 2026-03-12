@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Our Memories - In-Sync</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="theme-color" content="#FF2D55">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <link rel="apple-touch-icon" href="icon-500.png">
+    <link rel="stylesheet" href="css/style.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div id="app">
+        <!-- Home Screen -->
+        <div id="home-screen" class="screen">
+            <header class="home-header">
+                <div class="header-top">
+                    <div>
+                        <span class="greeting">Good to see you,</span>
+                        <h1 class="user-name" id="user-greeting">Name</h1>
+                    </div>
+                    <button class="menu-btn" id="menu-btn">
+                        <span class="menu-line"></span>
+                        <span class="menu-line"></span>
+                        <span class="menu-line"></span>
+                    </button>
+                </div>
+                <div id="partner-row" class="partner-row hidden">
+                    <div class="partner-avatars">
+                        <span class="avatar-dot me"></span>
+                        <span class="avatar-dot partner"></span>
+                    </div>
+                    <span class="partner-text">Paired with <strong id="partner-name">Partner</strong></span>
+                </div>
+                <div class="header-actions">
+                    <button class="action-button" id="messages-btn">
+                        <span class="action-icon">💭</span>
+                        <span class="action-text">Messages</span>
+                    </button>
+                </div>
+            </header>
+            <main class="memories-list" id="memories-list">
+                <!-- Memories will be rendered here -->
+            </main>
+            <div class="empty-state hidden" id="empty-state">
+                <div class="empty-icon-container">
+                    <span class="empty-emoji">✨</span>
+                </div>
+                <h2 class="empty-title">No Memories Yet</h2>
+                <p class="empty-text">Start capturing your special moments together. Add a photo, write a love letter, or share a favorite song.</p>
+            </div>
+            <button class="fab" id="fab-new-memory">
+                <span class="fab-icon">+</span>
+                <span class="fab-text">New Memory</span>
+            </button>
+        </div>
+
+        <!-- Memory Detail Modal -->
+        <div class="modal hidden" id="memory-modal">
+            <div class="modal-backdrop" id="modal-backdrop"></div>
+            <div class="modal-content">
+                <div class="modal-handle"></div>
+                <div class="modal-media" id="modal-media"></div>
+                <div class="modal-body">
+                    <div class="modal-meta-top">
+                        <span class="modal-type-badge" id="modal-type-badge">PHOTO</span>
+                        <span class="modal-date" id="modal-date">Jan 1, 2025</span>
+                    </div>
+                    <h2 class="modal-title" id="modal-title">Memory Title</h2>
+                    <p class="modal-desc" id="modal-desc">Description goes here</p>
+                    <div class="modal-author">
+                        <div class="modal-author-avatar" id="modal-author-avatar">?</div>
+                        <div>
+                            <span class="modal-author-label">Shared by</span>
+                            <span class="modal-author-name" id="modal-author-name">Name</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button class="modal-close-btn" id="modal-close">Done</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Media Viewer Modal -->
+        <div class="media-viewer hidden" id="media-viewer">
+            <button class="media-viewer-close" id="media-viewer-close">✕</button>
+            <div class="media-viewer-content" id="media-viewer-content"></div>
+            <div class="media-viewer-info">
+                <span class="media-viewer-type" id="viewer-type">PHOTO</span>
+                <h2 class="media-viewer-title" id="viewer-title">Title</h2>
+                <p class="media-viewer-desc" id="viewer-desc">Description</p>
+                <span class="media-viewer-meta" id="viewer-meta">Date · Author</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/supabase.js"></script>
+    <script src="js/router.js"></script>
+    <script src="js/home.js"></script>
+</body>
+</html>
