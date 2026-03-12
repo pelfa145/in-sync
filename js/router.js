@@ -23,7 +23,7 @@ function showScreen(screenId) {
 
 function navigateTo(page, params = {}) {
     const targetPage = page.includes('.html') ? page : page + '.html';
-    const currentPage = window.location.pathname.split('/').pop() || 'auth.html';
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     
     if (currentPage === targetPage) {
         return;
@@ -49,17 +49,16 @@ function applyTheme() {
 
 async function initAppState() {
     const { data: { session } } = await supabaseClient.auth.getSession();
-    const currentPage = window.location.pathname.split('/').pop() || 'auth.html';
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     
     AppState.isDarkMode = localStorage.getItem('darkMode') === 'true';
     AppState.activeTheme = localStorage.getItem('theme') || 'pink';
     AppState.isPremium = localStorage.getItem('isPremium') === 'true';
     applyTheme();
     
-    // ... rest of the function remains same, I will provide the full block to avoid // ... errors
     if (!session?.user) {
-        if (currentPage !== 'auth.html') {
-            window.location.href = 'auth.html';
+        if (currentPage !== 'index.html') {
+            window.location.href = 'index.html';
         }
         return null;
     }
@@ -67,8 +66,8 @@ async function initAppState() {
     try {
         const profile = await getUserProfile(session.user.id);
         if (!profile) {
-            if (currentPage !== 'auth.html') {
-                window.location.href = 'auth.html';
+            if (currentPage !== 'index.html') {
+                window.location.href = 'index.html';
             }
             return null;
         }
@@ -81,7 +80,7 @@ async function initAppState() {
         }
 
         // Handle redirects based on state
-        if (currentPage === 'auth.html') {
+        if (currentPage === 'index.html') {
             if (!profile.partnerId) {
                 navigateTo('pairing.html');
             } else {
@@ -89,15 +88,15 @@ async function initAppState() {
             }
         } else if (currentPage === 'pairing.html' && profile.partnerId) {
             navigateTo('home.html');
-        } else if (currentPage !== 'pairing.html' && currentPage !== 'auth.html' && !profile.partnerId) {
+        } else if (currentPage !== 'pairing.html' && currentPage !== 'index.html' && !profile.partnerId) {
             navigateTo('pairing.html');
         }
 
         return profile;
     } catch (e) {
         console.error('Error initializing app state:', e);
-        if (currentPage !== 'auth.html') {
-            window.location.href = 'auth.html';
+        if (currentPage !== 'index.html') {
+            window.location.href = 'index.html';
         }
         return null;
     }
@@ -109,19 +108,19 @@ document.addEventListener('DOMContentLoaded', async () => {
     
     // Listen for auth changes to handle logout/login in real-time
     onAuthChange(async (user) => {
-        const currentPage = window.location.pathname.split('/').pop() || 'auth.html';
-        if (!user && currentPage !== 'auth.html') {
-            window.location.href = 'auth.html';
-        } else if (user && currentPage === 'auth.html') {
+        const currentPage = window.location.pathname.split('/').pop() || 'index.html';
+        if (!user && currentPage !== 'index.html') {
+            window.location.href = 'index.html';
+        } else if (user && currentPage === 'index.html') {
             await initAppState(); // Refresh profile and redirect
         }
     });
 
     // Show the appropriate screen for the current HTML file
-    const currentPage = window.location.pathname.split('/').pop() || 'auth.html';
+    const currentPage = window.location.pathname.split('/').pop() || 'index.html';
     const pageKey = currentPage.replace('.html', '');
     const screenMap = {
-        'auth': 'auth-screen',
+        'index': 'auth-screen',
         'pairing': 'pairing-screen',
         'home': 'home-screen',
         'new-memory': 'new-memory-screen',

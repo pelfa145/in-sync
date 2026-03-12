@@ -1,7 +1,7 @@
 const CACHE_NAME = 'in-sync-v1';
 const ASSETS_TO_CACHE = [
   '/',
-  '/auth.html',
+  '/index.html',
   '/home.html',
   '/pairing.html',
   '/chat.html',

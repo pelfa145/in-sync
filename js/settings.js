@@ -127,7 +127,7 @@ async function handleSignOut() {
         AppState.partner = null;
         AppState.memories = [];
         AppState.messages = [];
-        navigateTo('auth.html');
+        navigateTo('index.html');
     } catch (e) {
         alert('Error signing out: ' + e.message);
     }

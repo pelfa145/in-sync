@@ -37,7 +37,7 @@ async function handlePair() {
     }
 
     if (!AppState.currentUser) {
-        navigateTo('auth.html');
+        navigateTo('index.html');
         return;
     }
 
