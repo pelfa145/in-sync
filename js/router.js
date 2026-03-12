@@ -98,14 +98,14 @@ async function initAppState() {
         // Handle redirects based on state
         if (currentPage === 'index.html') {
             if (!profile.partnerId) {
-                navigateTo('pairing.html');
+                navigateTo('pairing');
             } else {
-                navigateTo('home.html');
+                navigateTo('home');
             }
         } else if (currentPage === 'pairing.html' && profile.partnerId) {
-            navigateTo('home.html');
+            navigateTo('home');
         } else if (currentPage !== 'pairing.html' && currentPage !== 'index.html' && !profile.partnerId) {
-            navigateTo('pairing.html');
+            navigateTo('pairing');
         }
 
         return profile;

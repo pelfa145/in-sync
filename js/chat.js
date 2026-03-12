@@ -7,7 +7,7 @@ function initChat() {
 
     if (!chatBack) return;
 
-    chatBack.addEventListener('click', () => navigateTo('home.html'));
+    chatBack.addEventListener('click', () => navigateTo('home'));
 
     if (!AppState.partner && !AppState.currentUser?.partnerId) {
         document.getElementById('no-partner-chat').classList.remove('hidden');

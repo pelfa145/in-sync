@@ -1,6 +1,7 @@
 let selectedType = 'photo';
 let selectedFile = null;
 let cameraStream = null;
+let currentFacingMode = 'user';
 
 function initNewMemory() {
     const backBtn = document.getElementById('new-memory-back');
@@ -19,9 +20,10 @@ function initNewMemory() {
     const choiceBackdrop = document.getElementById('choice-backdrop');
     const cameraCaptureBtn = document.getElementById('camera-capture-btn');
     const cameraBackBtn = document.getElementById('camera-back-btn');
+    const cameraFlipBtn = document.getElementById('camera-flip-btn');
 
     if (backBtn) {
-        backBtn.addEventListener('click', () => navigateTo('home.html'));
+        backBtn.addEventListener('click', () => navigateTo('home'));
     }
 
     if (mediaPicker) {
@@ -35,6 +37,7 @@ function initNewMemory() {
 
     if (choiceCamera) choiceCamera.addEventListener('click', () => {
         closeMediaChoices();
+        currentFacingMode = 'user'; // Reset to selfie when opening
         startCamera();
     });
 
@@ -43,6 +46,7 @@ function initNewMemory() {
     
     if (cameraCaptureBtn) cameraCaptureBtn.addEventListener('click', captureFromCamera);
     if (cameraBackBtn) cameraBackBtn.addEventListener('click', stopCamera);
+    if (cameraFlipBtn) cameraFlipBtn.addEventListener('click', flipCamera);
 
     if (!typeChips.length) return;
 
@@ -59,7 +63,7 @@ function initNewMemory() {
         chip.addEventListener('click', () => {
             if (isLocked) {
                 if (confirm('Videos and Songs are Premium features. Upgrade now?')) {
-                    navigateTo('paywall.html');
+                    navigateTo('paywall');
                 }
                 return;
             }
@@ -217,7 +221,7 @@ async function handleSave() {
             uri: uri || null,
         });
 
-        navigateTo('home.html');
+        navigateTo('home');
     } catch (e) {
         alert('Error saving memory: ' + e.message);
     } finally {
@@ -241,17 +245,52 @@ async function startCamera() {
     const cameraScreen = document.getElementById('camera-screen');
     const video = document.getElementById('camera-video');
     
+    // Stop any existing stream
+    if (cameraStream) {
+        cameraStream.getTracks().forEach(track => track.stop());
+    }
+
+    const constraints = {
+        video: { 
+            facingMode: currentFacingMode === 'user' ? 'user' : 'environment',
+            width: { ideal: 1280 },
+            height: { ideal: 720 }
+        },
+        audio: false
+    };
+    
     try {
-        cameraStream = await navigator.mediaDevices.getUserMedia({ 
-            video: { facingMode: 'user' }, 
-            audio: false 
-        });
+        cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = cameraStream;
+        
+        if (currentFacingMode === 'user') {
+            video.classList.add('mirror');
+        } else {
+            video.classList.remove('mirror');
+        }
+        
         cameraScreen.style.display = 'flex';
     } catch (err) {
-        console.error('Camera access denied:', err);
-        alert('Could not access camera. Please check permissions.');
+        console.error('Camera access error:', err);
+        
+        // If 'user' failed, try a generic request as fallback
+        if (currentFacingMode === 'user') {
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: true });
+                video.srcObject = cameraStream;
+                cameraScreen.style.display = 'flex';
+            } catch (fallbackErr) {
+                alert('Could not access camera. Please check permissions.');
+            }
+        } else {
+            alert('Could not access camera. Please check permissions.');
+        }
     }
+}
+
+function flipCamera() {
+    currentFacingMode = (currentFacingMode === 'user') ? 'environment' : 'user';
+    startCamera(); // Restart with new mode
 }
 
 function stopCamera() {
@@ -269,17 +308,26 @@ function stopCamera() {
 
 function captureFromCamera() {
     const video = document.getElementById('camera-video');
+    if (!video || !video.videoWidth) return;
+
     const canvas = document.createElement('canvas');
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     
     const ctx = canvas.getContext('2d');
+    
+    // If it's the selfie camera, we usually want to mirror it for the capture too?
+    // Most users expect the photo to look like the preview.
+    if (currentFacingMode === 'user') {
+        ctx.translate(canvas.width, 0);
+        ctx.scale(-1, 1);
+    }
+    
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     canvas.toBlob((blob) => {
         const file = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
         
-        // Use existing handleFileSelect logic style
         selectedFile = file;
         const mediaPicker = document.getElementById('media-picker');
         const mediaPreview = document.getElementById('media-preview');
@@ -292,7 +340,7 @@ function captureFromCamera() {
 
         if (selectedType === 'photo') {
             if (mediaPreview && mediaPreviewImg) {
-                mediaPreviewImg.src = URL.createObjectURL(file);
+                mediaPreviewImg.src = URL.createObjectURL(blob);
                 mediaPreview.classList.remove('hidden');
             }
         } else {

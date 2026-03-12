@@ -19,8 +19,8 @@ function initHome() {
         document.getElementById('partner-name').textContent = AppState.partner.name?.split(' ')[0];
     }
 
-    menuBtn.addEventListener('click', () => navigateTo('settings.html'));
-    messagesBtn.addEventListener('click', () => navigateTo('chat.html'));
+    menuBtn.addEventListener('click', () => navigateTo('settings'));
+    messagesBtn.addEventListener('click', () => navigateTo('chat'));
     fab.addEventListener('click', () => {
         // Check quantity limit for free users
         if (!AppState.isPremium && AppState.memories.length >= 3) {
@@ -28,7 +28,7 @@ function initHome() {
             navigateTo('paywall.html');
             return;
         }
-        navigateTo('new-memory.html');
+        navigateTo('new-memory');
     });
 
     if (modalBackdrop) modalBackdrop.addEventListener('click', closeModal);

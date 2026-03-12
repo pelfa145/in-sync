@@ -13,7 +13,7 @@ function initPaywall() {
     });
 
     closeBtn.addEventListener('click', () => {
-        navigateTo('settings.html');
+        navigateTo('settings');
     });
 
     cancelPaymentBtn.addEventListener('click', () => {
@@ -38,7 +38,7 @@ function initPaywall() {
                 AppState.isPremium = true;
                 
                 alert('Success! Your account has been upgraded to Premium.');
-                navigateTo('settings.html');
+                navigateTo('settings');
             } catch (e) {
                 alert('Payment failed. Please try again.');
                 confirmPaymentBtn.disabled = false;

@@ -29,7 +29,7 @@ function initSettings() {
     }
 
     if (upgradeBtn) {
-        upgradeBtn.addEventListener('click', () => navigateTo('paywall.html'));
+        upgradeBtn.addEventListener('click', () => navigateTo('paywall'));
     }
 
     if (AppState.partner) {
@@ -74,7 +74,7 @@ function initSettings() {
         applyTheme();
     });
 
-    settingsBack.addEventListener('click', () => navigateTo('home.html'));
+    settingsBack.addEventListener('click', () => navigateTo('home'));
 
     if (settingsCodeInput) {
         settingsCodeInput.addEventListener('input', () => {
@@ -133,7 +133,7 @@ async function handleSignOut() {
         AppState.partner = null;
         AppState.memories = [];
         AppState.messages = [];
-        navigateTo('index.html');
+        navigateTo('index');
     } catch (e) {
         alert('Error signing out: ' + e.message);
     }

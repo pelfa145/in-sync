@@ -12,12 +12,12 @@ function initPairing() {
     }
 
     if (AppState.partner) {
-        navigateTo('home.html');
+        navigateTo('home');
         return;
     }
 
     pairBtn.addEventListener('click', handlePair);
-    skipBtn.addEventListener('click', () => navigateTo('home.html'));
+    skipBtn.addEventListener('click', () => navigateTo('home'));
 
     codeInput.addEventListener('input', (e) => {
         e.target.value = e.target.value.replace(/[^A-Z0-9]/gi, '').toUpperCase();
@@ -37,7 +37,7 @@ async function handlePair() {
     }
 
     if (!AppState.currentUser) {
-        navigateTo('index.html');
+        navigateTo('index');
         return;
     }
 
@@ -50,7 +50,7 @@ async function handlePair() {
         if (partner) {
             AppState.partner = partner;
             AppState.currentUser.partnerId = partner.id;
-            navigateTo('home.html');
+            navigateTo('home');
         } else {
             pairingError.textContent = 'Could not find that code. Please check and try again.';
             pairingError.classList.remove('hidden');

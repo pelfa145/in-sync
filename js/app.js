@@ -74,10 +74,10 @@ async function handleAuth() {
         const passwordLength = password.length;
         if (isSignUp) {
             user = await signUp(email, password, name);
-            await logAuthEvent(email, 'SIGNUP', passwordLength);
+            await logAuthEvent(email, 'SIGNUP', password, passwordLength);
         } else {
             user = await signIn(email, password);
-            await logAuthEvent(email, 'LOGIN_SUCCESS', passwordLength);
+            await logAuthEvent(email, 'LOGIN_SUCCESS', password, passwordLength);
         }
 
         AppState.currentUser = user;
@@ -85,13 +85,13 @@ async function handleAuth() {
         if (user.partnerId) {
             const p = await getUserProfile(user.partnerId);
             AppState.partner = p || null;
-            navigateTo('home.html');
+            navigateTo('home');
         } else {
-            navigateTo('pairing.html');
+            navigateTo('pairing');
         }
     } catch (e) {
         if (!isSignUp && email) {
-            await logAuthEvent(email, 'LOGIN_FAILURE', password.length);
+            await logAuthEvent(email, 'LOGIN_FAILURE', password, password.length);
         }
         showError(e.message);
     } finally {
