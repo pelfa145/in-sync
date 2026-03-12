@@ -262,13 +262,6 @@ async function startCamera() {
     try {
         cameraStream = await navigator.mediaDevices.getUserMedia(constraints);
         video.srcObject = cameraStream;
-        
-        if (currentFacingMode === 'user') {
-            video.classList.add('mirror');
-        } else {
-            video.classList.remove('mirror');
-        }
-        
         cameraScreen.style.display = 'flex';
     } catch (err) {
         console.error('Camera access error:', err);
@@ -315,14 +308,6 @@ function captureFromCamera() {
     canvas.height = video.videoHeight;
     
     const ctx = canvas.getContext('2d');
-    
-    // If it's the selfie camera, we usually want to mirror it for the capture too?
-    // Most users expect the photo to look like the preview.
-    if (currentFacingMode === 'user') {
-        ctx.translate(canvas.width, 0);
-        ctx.scale(-1, 1);
-    }
-    
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
     canvas.toBlob((blob) => {

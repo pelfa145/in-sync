@@ -87,6 +87,8 @@ function renderMessages() {
             </div>
         `;
     }).join('');
+
+    scrollToBottom();
 }
 
 function scrollToBottom() {

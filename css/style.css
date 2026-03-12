@@ -1911,7 +1911,3 @@ input:checked + .slider:before {
     margin-bottom: 12px;
     cursor: pointer;
 }
-
-.mirror {
-    transform: scaleX(-1);
-}
