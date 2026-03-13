@@ -366,3 +366,159 @@ function subscribeComments(memoryId, callback) {
     };
 }
 
+// GOALS FUNCTIONS
+async function createGoal(goalData) {
+    const { error } = await supabaseClient.from('goals').insert([{
+        user_id: goalData.userId,
+        partner_id: goalData.partnerId,
+        text: goalData.text,
+        completed: goalData.completed || false,
+    }]);
+    if (error) throw error;
+}
+
+function subscribeGoals(userId, partnerId, callback) {
+    let query = supabaseClient
+        .from('goals')
+        .select('*')
+        .or(`user_id.eq.${userId},partner_id.eq.${userId}`)
+        .order('created_at', { ascending: false });
+
+    // If partner exists, also get their goals
+    if (partnerId) {
+        query = supabaseClient
+            .from('goals')
+            .select('*')
+            .or(`(user_id.eq.${userId},partner_id.eq.${userId}), (user_id.eq.${partnerId},partner_id.eq.${partnerId})`)
+            .order('created_at', { ascending: false });
+    }
+
+    query.then(({ data }) => {
+        if (data) {
+            callback(data.map(d => ({
+                id: d.id,
+                userId: d.user_id,
+                partnerId: d.partner_id,
+                text: d.text,
+                completed: d.completed,
+                createdAt: new Date(d.created_at).getTime(),
+            })));
+        }
+    }).catch(error => {
+        console.error('Goals subscription error:', error);
+        // Return empty array if table doesn't exist
+        callback([]);
+    });
+
+    const channel = supabaseClient
+        .channel(`goals:${userId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'goals' },
+        () => {
+            query.then(({ data }) => {
+                if (data) {
+                    callback(data.map(d => ({
+                        id: d.id,
+                        userId: d.user_id,
+                        partnerId: d.partner_id,
+                        text: d.text,
+                        completed: d.completed,
+                        createdAt: new Date(d.created_at).getTime(),
+                    })));
+                }
+            }).catch(error => {
+                console.error('Goals refresh error:', error);
+            });
+        })
+        .subscribe();
+
+    return () => {
+        supabaseClient.removeChannel(channel);
+    };
+}
+
+async function updateGoal(goalId, updates) {
+    const { error } = await supabaseClient
+        .from('goals')
+        .update(updates)
+        .eq('id', goalId);
+    if (error) throw error;
+}
+
+async function deleteGoalFromDB(goalId) {
+    const { error } = await supabaseClient
+        .from('goals')
+        .delete()
+        .eq('id', goalId);
+    if (error) throw error;
+}
+
+// MOOD TRACKING FUNCTIONS
+async function createMoodEntry(moodData) {
+    const { error } = await supabaseClient.from('mood_entries').insert([{
+        user_id: moodData.userId,
+        partner_id: moodData.partnerId,
+        mood: moodData.mood,
+        note: moodData.note,
+    }]);
+    if (error) throw error;
+}
+
+function subscribeMoodEntries(userId, partnerId, callback) {
+    let query = supabaseClient
+        .from('mood_entries')
+        .select('*')
+        .or(`user_id.eq.${userId},partner_id.eq.${userId}`)
+        .order('created_at', { ascending: false });
+
+    // If partner exists, also get their mood entries
+    if (partnerId) {
+        query = supabaseClient
+            .from('mood_entries')
+            .select('*')
+            .or(`(user_id.eq.${userId},partner_id.eq.${userId}), (user_id.eq.${partnerId},partner_id.eq.${partnerId})`)
+            .order('created_at', { ascending: false });
+    }
+
+    query.then(({ data }) => {
+        if (data) {
+            callback(data.map(d => ({
+                id: d.id,
+                userId: d.user_id,
+                partnerId: d.partner_id,
+                mood: d.mood,
+                note: d.note,
+                createdAt: new Date(d.created_at).getTime(),
+            })));
+        }
+    }).catch(error => {
+        console.error('Mood entries subscription error:', error);
+        // Return empty array if table doesn't exist
+        callback([]);
+    });
+
+    const channel = supabaseClient
+        .channel(`mood_entries:${userId}`)
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'mood_entries' },
+        () => {
+            query.then(({ data }) => {
+                if (data) {
+                    callback(data.map(d => ({
+                        id: d.id,
+                        userId: d.user_id,
+                        partnerId: d.partner_id,
+                        mood: d.mood,
+                        note: d.note,
+                        createdAt: new Date(d.created_at).getTime(),
+                    })));
+                }
+            }).catch(error => {
+                console.error('Mood entries refresh error:', error);
+            });
+        })
+        .subscribe();
+
+    return () => {
+        supabaseClient.removeChannel(channel);
+    };
+}
+

@@ -43,8 +43,80 @@ function initChat() {
         });
     }
 
+    // Set up MutationObserver for auto-scroll
+    setupAutoScrollObserver();
+
     loadMessages();
 }
+
+let autoScrollObserver = null;
+
+function setupAutoScrollObserver() {
+    const container = document.getElementById('chat-messages');
+    if (!container) return;
+
+    // Clean up existing observer
+    if (autoScrollObserver) {
+        autoScrollObserver.disconnect();
+    }
+
+    // Create new observer to watch for child list changes
+    autoScrollObserver = new MutationObserver((mutations) => {
+        const wasAtBottom = isScrolledToBottom();
+        
+        mutations.forEach((mutation) => {
+            if (mutation.type === 'childList' && mutation.addedNodes.length > 0) {
+                // Check if any of the added nodes are message bubbles
+                const hasNewMessages = Array.from(mutation.addedNodes).some(node => {
+                    return node.nodeType === Node.ELEMENT_NODE && 
+                           (node.classList?.contains('bubble-row') || 
+                            node.querySelector?.('.bubble-row'));
+                });
+
+                if (hasNewMessages && (wasAtBottom || isOwnMessageAdded(mutation.addedNodes))) {
+                    // Scroll after a short delay to ensure content is rendered
+                    setTimeout(() => {
+                        scrollToBottom();
+                    }, 50);
+                }
+            }
+        });
+    });
+
+    // Start observing the container
+    autoScrollObserver.observe(container, {
+        childList: true,
+        subtree: true
+    });
+}
+
+function isOwnMessageAdded(addedNodes) {
+    return Array.from(addedNodes).some(node => {
+        if (node.nodeType === Node.ELEMENT_NODE && node.classList?.contains('me')) {
+            return true;
+        }
+        return node.querySelector?.('.me') !== null;
+    });
+}
+
+// Ensure we scroll to bottom when screen becomes visible
+document.addEventListener('screenShow', (e) => {
+    if (e.detail.screenId === 'chat-screen') {
+        // Delay scrolling to ensure content is rendered and container has proper height
+        setTimeout(() => {
+            scrollToBottom();
+        }, 150);
+        
+        // Additional scroll after a longer delay to handle any late-rendering content
+        setTimeout(() => {
+            scrollToBottom();
+        }, 300);
+    } else if (autoScrollObserver) {
+        // Clean up observer when leaving chat screen
+        autoScrollObserver.disconnect();
+        autoScrollObserver = null;
+    }
+});
 
 async function loadMessages() {
     if (!AppState.currentUser) return;
@@ -60,11 +132,33 @@ async function loadMessages() {
         AppState.currentUser.id,
         pId,
         (messages) => {
+            const wasAtBottom = isScrolledToBottom();
             AppState.messages = messages;
             renderMessages();
-            scrollToBottom();
+            
+            // Only auto-scroll if user was already at bottom or if this is their own message
+            const lastMessage = messages[messages.length - 1];
+            const isOwnMessage = lastMessage?.fromUserId === AppState.currentUser.id;
+            
+            if (wasAtBottom || isOwnMessage) {
+                scrollToBottom();
+            }
         }
     );
+    
+    // Initial scroll after messages are loaded
+    setTimeout(() => {
+        scrollToBottom();
+    }, 100);
+}
+
+// Helper function to check if user is at bottom of chat
+function isScrolledToBottom() {
+    const container = document.getElementById('chat-messages');
+    if (!container) return true;
+    
+    const threshold = 100; // 100px threshold
+    return container.scrollTop + container.clientHeight >= container.scrollHeight - threshold;
 }
 
 function renderMessages() {
@@ -88,21 +182,37 @@ function renderMessages() {
         `;
     }).join('');
 
-    scrollToBottom();
+    // Scroll after the DOM has been updated
+    requestAnimationFrame(() => {
+        scrollToBottom();
+    });
 }
 
 function scrollToBottom() {
     const container = document.getElementById('chat-messages');
-    if (container) {
-        // Use requestAnimationFrame to ensure the DOM has rendered the new messages
-        requestAnimationFrame(() => {
-            container.scrollTop = container.scrollHeight;
-            // Double check after a short delay for images/slow renders
-            setTimeout(() => {
-                container.scrollTop = container.scrollHeight;
-            }, 50);
-        });
+    if (!container) return;
+
+    // Force the container to have a height before scrolling
+    if (container.scrollHeight === 0) {
+        return; // Don't try to scroll if there's no content
     }
+
+    const scroll = () => {
+        container.scrollTop = container.scrollHeight;
+    };
+
+    // Immediate scroll
+    scroll();
+    
+    // Use requestAnimationFrame for smooth scrolling after DOM updates
+    requestAnimationFrame(() => {
+        scroll();
+    });
+    
+    // Additional scroll attempts with different timing
+    setTimeout(scroll, 50);
+    setTimeout(scroll, 100);
+    setTimeout(scroll, 250);
 }
 
 async function handleSend() {

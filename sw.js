@@ -13,6 +13,7 @@ const ASSETS_TO_CACHE = [
   'js/chat.js',
   'js/settings.js',
   'js/new-memory.js',
+  'js/cache.js',
   'icon-500.png'
 ];
 
@@ -38,6 +39,74 @@ self.addEventListener('activate', (event) => {
         })
       );
     }).then(() => self.clients.claim())
+  );
+});
+
+// Push notification event
+self.addEventListener('push', (event) => {
+  if (!event.data) return;
+
+  const data = event.data.json();
+  const options = {
+    body: data.body || 'You have a new notification',
+    icon: '/icon-500.png',
+    badge: '/icon-500.png',
+    vibrate: [200, 100, 200],
+    data: data.data || {},
+    actions: [
+      {
+        action: 'open',
+        title: 'Open App'
+      },
+      {
+        action: 'close',
+        title: 'Close'
+      }
+    ]
+  };
+
+  // Customize notification based on type
+  if (data.type === 'new_memory') {
+    options.title = 'New Memory Shared! 💕';
+    options.body = `${data.authorName} shared a new memory: "${data.memoryTitle}"`;
+  } else if (data.type === 'new_comment') {
+    options.title = 'New Comment 💬';
+    options.body = `${data.authorName} commented on your memory`;
+  } else if (data.type === 'new_message') {
+    options.title = 'New Message 💭';
+    options.body = `${data.authorName}: ${data.message}`;
+  } else {
+    options.title = data.title || 'In-Sync Notification';
+  }
+
+  event.waitUntil(
+    self.registration.showNotification(options.title, options)
+  );
+});
+
+// Notification click event
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close();
+
+  if (event.action === 'close') {
+    return;
+  }
+
+  // Open the app
+  event.waitUntil(
+    clients.matchAll({ type: 'window' }).then((clientList) => {
+      // If app is already open, focus it
+      for (const client of clientList) {
+        if (client.url && client.url.includes('home.html')) {
+          return client.focus();
+        }
+      }
+      
+      // Otherwise, open a new window
+      if (clients.openWindow) {
+        return clients.openWindow('/home.html');
+      }
+    })
   );
 });
 

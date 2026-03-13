@@ -136,11 +136,21 @@ function updateMediaSection() {
     resetMediaPicker();
 }
 
-function handleFileSelect(e) {
+async function handleFileSelect(e) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    selectedFile = file;
+    // Compress image if it's a photo
+    if (selectedType === 'photo' && file.type.startsWith('image/')) {
+        try {
+            selectedFile = await compressImage(file);
+        } catch (error) {
+            console.error('Image compression failed:', error);
+            selectedFile = file; // Fallback to original file
+        }
+    } else {
+        selectedFile = file;
+    }
 
     const mediaPicker = document.getElementById('media-picker');
     const mediaPreview = document.getElementById('media-preview');
@@ -153,7 +163,7 @@ function handleFileSelect(e) {
 
     if (selectedType === 'photo') {
         if (mediaPreview && mediaPreviewImg) {
-            mediaPreviewImg.src = URL.createObjectURL(file);
+            mediaPreviewImg.src = URL.createObjectURL(selectedFile);
             mediaPreview.classList.remove('hidden');
         }
         if (mediaAttached) mediaAttached.classList.add('hidden');
@@ -310,10 +320,16 @@ function captureFromCamera() {
     const ctx = canvas.getContext('2d');
     ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
     
-    canvas.toBlob((blob) => {
-        const file = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
+    canvas.toBlob(async (blob) => {
+        try {
+            // Compress the captured image
+            const compressedFile = await compressImage(new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' }));
+            selectedFile = compressedFile;
+        } catch (error) {
+            console.error('Camera image compression failed:', error);
+            selectedFile = new File([blob], `camera_${Date.now()}.jpg`, { type: 'image/jpeg' });
+        }
         
-        selectedFile = file;
         const mediaPicker = document.getElementById('media-picker');
         const mediaPreview = document.getElementById('media-preview');
         const mediaPreviewImg = document.getElementById('media-preview-img');
@@ -325,7 +341,7 @@ function captureFromCamera() {
 
         if (selectedType === 'photo') {
             if (mediaPreview && mediaPreviewImg) {
-                mediaPreviewImg.src = URL.createObjectURL(blob);
+                mediaPreviewImg.src = URL.createObjectURL(selectedFile);
                 mediaPreview.classList.remove('hidden');
             }
         } else {
@@ -335,6 +351,47 @@ function captureFromCamera() {
         updateSaveButton();
         stopCamera();
     }, 'image/jpeg', 0.8);
+}
+
+// Image compression function
+async function compressImage(file, maxWidth = 1920, maxHeight = 1920, quality = 0.8) {
+    return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.onload = () => {
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            
+            // Calculate new dimensions
+            let { width, height } = img;
+            
+            if (width > maxWidth || height > maxHeight) {
+                const ratio = Math.min(maxWidth / width, maxHeight / height);
+                width *= ratio;
+                height *= ratio;
+            }
+            
+            canvas.width = width;
+            canvas.height = height;
+            
+            // Draw and compress
+            ctx.drawImage(img, 0, 0, width, height);
+            
+            canvas.toBlob((blob) => {
+                if (blob) {
+                    const compressedFile = new File([blob], file.name, {
+                        type: 'image/jpeg',
+                        lastModified: Date.now()
+                    });
+                    resolve(compressedFile);
+                } else {
+                    reject(new Error('Compression failed'));
+                }
+            }, 'image/jpeg', quality);
+        };
+        
+        img.onerror = () => reject(new Error('Failed to load image'));
+        img.src = URL.createObjectURL(file);
+    });
 }
 
 if (window.AppStateReady) {

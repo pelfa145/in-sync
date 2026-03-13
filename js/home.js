@@ -19,6 +19,11 @@ function initHome() {
         document.getElementById('partner-name').textContent = AppState.partner.name?.split(' ')[0];
     }
 
+    // Initialize push notifications
+    if (AppState.currentUser && window.notificationManager) {
+        window.notificationManager.initialize(AppState.currentUser.id).catch(console.error);
+    }
+
     menuBtn.addEventListener('click', () => navigateTo('settings'));
     messagesBtn.addEventListener('click', () => navigateTo('chat'));
     fab.addEventListener('click', () => {
@@ -61,6 +66,14 @@ async function loadMemories() {
     if (!AppState.currentUser) return;
 
     const pId = AppState.partner?.id || AppState.currentUser.partnerId;
+    const cacheKey = `memories_${AppState.currentUser.id}_${pId || 'single'}`;
+
+    // Try to get from cache first
+    const cachedMemories = window.CacheManager?.dataCache?.get(cacheKey);
+    if (cachedMemories) {
+        AppState.memories = cachedMemories;
+        renderMemories();
+    }
 
     if (memoriesUnsubscribe) {
         memoriesUnsubscribe();
@@ -71,6 +84,8 @@ async function loadMemories() {
         pId || undefined,
         (memories) => {
             AppState.memories = memories;
+            // Cache the memories
+            window.CacheManager?.dataCache?.set(cacheKey, memories);
             renderMemories();
         }
     );
@@ -90,6 +105,9 @@ function renderMemories() {
 
     emptyState.classList.add('hidden');
     container.innerHTML = AppState.memories.map(memory => renderMemoryCard(memory)).join('');
+
+    // Setup lazy loading for images
+    setupLazyLoading();
 
     container.querySelectorAll('.card').forEach(card => {
         card.addEventListener('click', () => {
@@ -134,7 +152,7 @@ function renderMemoryCard(memory) {
             <div class="card-wrapper">
                 <div class="card" data-id="${memory.id}">
                     <div class="card-image-container">
-                        <img src="${memory.uri}" alt="${memory.title}" class="card-image">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 300'%3E%3Crect fill='%23f2f2f7' width='400' height='300'/%3E%3Ctext fill='%238e8e93' font-family='system-ui' font-size='14' text-anchor='middle' x='200' y='150'%3ELoading...%3C/text%3E%3C/svg%3E" data-src="${memory.uri}" alt="${memory.title}" class="card-image lazy-image">
                         <div class="card-image-overlay"></div>
                         <div class="card-floating-badge">
                             <span class="card-floating-badge-text">${memory.type.toUpperCase()}</span>
@@ -409,6 +427,52 @@ function escapeHtml(text) {
     const div = document.createElement('div');
     div.textContent = text;
     return div.innerHTML;
+}
+
+// Lazy loading implementation
+function setupLazyLoading() {
+    const imageObserver = new IntersectionObserver((entries, observer) => {
+        entries.forEach(async (entry) => {
+            if (entry.isIntersecting) {
+                const img = entry.target;
+                const src = img.dataset.src;
+                
+                if (src) {
+                    img.style.opacity = '0';
+                    img.style.transition = 'opacity 0.3s ease';
+                    
+                    // Try to get from image cache first
+                    if (window.CacheManager?.imageCache) {
+                        try {
+                            const cachedUrl = await window.CacheManager.imageCache.get(src);
+                            img.src = cachedUrl;
+                        } catch (error) {
+                            console.error('Image cache failed:', error);
+                            img.src = src;
+                        }
+                    } else {
+                        img.src = src;
+                    }
+                    
+                    img.onload = () => {
+                        img.style.opacity = '1';
+                    };
+                    img.onerror = () => {
+                        img.src = 'data:image/svg+xml,%3Csvg xmlns=\'http://www.w3.org/2000/svg\' viewBox=\'0 0 400 300\'%3E%3Crect fill=\'%23f2f2f7\' width=\'400\' height=\'300\'/%3E%3Ctext fill=\'%23ff3b30\' font-family=\'system-ui\' font-size=\'14\' text-anchor=\'middle\' x=\'200\' y=\'150\'%3EFailed to load%3C/text%3E%3C/svg%3E';
+                    };
+                    
+                    observer.unobserve(img);
+                }
+            }
+        });
+    }, {
+        rootMargin: '50px 0px',
+        threshold: 0.1
+    });
+
+    document.querySelectorAll('.lazy-image').forEach(img => {
+        imageObserver.observe(img);
+    });
 }
 
 if (window.AppStateReady) {

@@ -43,6 +43,10 @@
                         <span class="action-icon">💭</span>
                         <span class="action-text">Messages</span>
                     </button>
+                    <button class="action-button" id="relationship-btn">
+                        <span class="action-icon">💑</span>
+                        <span class="action-text">Couple</span>
+                    </button>
                 </div>
             </header>
             <main class="memories-list" id="memories-list">
@@ -78,6 +82,36 @@
                     <textarea id="chat-input" class="chat-input" placeholder="Type a message..." rows="1"></textarea>
                     <button class="send-btn" id="send-btn" disabled>↑</button>
                 </div>
+            </div>
+        </div>
+
+        <!-- Relationship Features Screen -->
+        <div id="relationship-screen" class="screen">
+            <header class="chat-header">
+                <button class="back-btn" id="relationship-back">←</button>
+                <h1 class="chat-title">Couple Features</h1>
+            </header>
+            <div class="relationship-grid">
+                <button class="relationship-card" id="goals-btn">
+                    <div class="relationship-icon">🎯</div>
+                    <h3>Couple Goals</h3>
+                    <p>Share your dreams and bucket list</p>
+                </button>
+                <button class="relationship-card" id="mood-btn">
+                    <div class="relationship-icon">💭</div>
+                    <h3>Daily Check-in</h3>
+                    <p>Track your relationship mood</p>
+                </button>
+                <button class="relationship-card" id="games-btn">
+                    <div class="relationship-icon">🎮</div>
+                    <h3>Memory Games</h3>
+                    <p>Quiz about your shared memories</p>
+                </button>
+                <button class="relationship-card" id="date-btn">
+                    <div class="relationship-icon">🌟</div>
+                    <h3>Date Planner</h3>
+                    <p>Get ideas based on memories</p>
+                </button>
             </div>
         </div>
 
@@ -344,6 +378,109 @@
             </div>
         </div>
 
+        <!-- Goals Screen -->
+        <div id="goals-screen" class="screen">
+            <header class="chat-header">
+                <button class="back-btn" id="goals-back">←</button>
+                <h1 class="chat-title">Couple Goals</h1>
+            </header>
+            <div class="goals-container">
+                <div class="goals-input-section">
+                    <input type="text" id="goal-input" class="goal-input" placeholder="Add a new goal or dream...">
+                    <button class="add-goal-btn" id="add-goal-btn">+</button>
+                </div>
+                <div class="goals-list" id="goals-list">
+                    <!-- Goals will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Mood Tracking Screen -->
+        <div id="mood-screen" class="screen">
+            <header class="chat-header">
+                <button class="back-btn" id="mood-back">←</button>
+                <h1 class="chat-title">Daily Check-in</h1>
+            </header>
+            <div class="mood-container">
+                <div class="mood-question">
+                    <h2>How are you feeling about your relationship today?</h2>
+                </div>
+                <div class="mood-emojis">
+                    <button class="mood-emoji" data-mood="5">😍</button>
+                    <button class="mood-emoji" data-mood="4">😊</button>
+                    <button class="mood-emoji" data-mood="3">😐</button>
+                    <button class="mood-emoji" data-mood="2">😔</button>
+                    <button class="mood-emoji" data-mood="1">😢</button>
+                </div>
+                <div class="mood-note-section">
+                    <textarea id="mood-note" class="mood-note" placeholder="Share what's on your mind..."></textarea>
+                    <button class="save-mood-btn" id="save-mood-btn">Save Check-in</button>
+                </div>
+                <div class="mood-history" id="mood-history">
+                    <!-- Mood history will be rendered here -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Memory Games Screen -->
+        <div id="games-screen" class="screen">
+            <header class="chat-header">
+                <button class="back-btn" id="games-back">←</button>
+                <h1 class="chat-title">Memory Games</h1>
+            </header>
+            <div class="games-container">
+                <div class="game-start" id="game-start">
+                    <h2>Test Your Memory!</h2>
+                    <p>How well do you remember your shared moments?</p>
+                    <button class="start-game-btn" id="start-game-btn">Start Quiz</button>
+                </div>
+                <div class="game-question hidden" id="game-question">
+                    <div class="game-progress">
+                        <span id="question-number">Question 1/5</span>
+                    </div>
+                    <h3 id="question-text">Loading question...</h3>
+                    <div class="game-options" id="game-options">
+                        <!-- Options will be rendered here -->
+                    </div>
+                </div>
+                <div class="game-result hidden" id="game-result">
+                    <h2>Quiz Complete!</h2>
+                    <div class="score-display">
+                        <span class="score-number" id="score-number">0</span>
+                        <span class="score-total">/5</span>
+                    </div>
+                    <p id="result-message">Great job!</p>
+                    <button class="play-again-btn" id="play-again-btn">Play Again</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Date Planner Screen -->
+        <div id="date-screen" class="screen">
+            <header class="chat-header">
+                <button class="back-btn" id="date-back">←</button>
+                <h1 class="chat-title">Date Night Planner</h1>
+            </header>
+            <div class="date-container">
+                <div class="date-suggestions" id="date-suggestions">
+                    <h2>Based on your memories...</h2>
+                    <div class="suggestion-cards" id="suggestion-cards">
+                        <!-- Suggestions will be rendered here -->
+                    </div>
+                </div>
+                <div class="date-categories">
+                    <h3>Browse by Category</h3>
+                    <div class="category-buttons">
+                        <button class="category-btn" data-category="outdoor">🌳 Outdoor</button>
+                        <button class="category-btn" data-category="food">🍽️ Food & Drink</button>
+                        <button class="category-btn" data-category="creative">🎨 Creative</button>
+                        <button class="category-btn" data-category="relaxing">🛀 Relaxing</button>
+                        <button class="category-btn" data-category="adventure">🎢 Adventure</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
         <!-- Camera Screen -->
         <div id="camera-screen" class="screen" style="background: #000; padding: 0; display: none; flex-direction: column; position: fixed; top: 0; left: 0; right: 0; bottom: 0; z-index: 3000;">
             <div id="camera-container" style="flex: 1; position: relative; overflow: hidden; display: flex; align-items: center; justify-content: center;">
@@ -358,11 +495,14 @@
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="js/cache.js"></script>
+    <script src="js/notifications.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/router.js"></script>
     <script src="js/home.js"></script>
     <script src="js/chat.js"></script>
     <script src="js/new-memory.js"></script>
     <script src="js/settings.js"></script>
+    <script src="js/relationship.js"></script>
 </body>
 </html>

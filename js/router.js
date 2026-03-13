@@ -11,13 +11,16 @@ const AppState = {
 function showScreen(screenId) {
     document.querySelectorAll('.screen').forEach(s => {
         s.classList.remove('active');
-        s.style.display = 'none';
+        s.classList.add('hidden');
     });
     
     const screen = document.getElementById(screenId);
     if (screen) {
+        screen.classList.remove('hidden');
         screen.classList.add('active');
-        screen.style.display = 'block';
+        
+        // Dispatch event so other scripts can react to screen change
+        document.dispatchEvent(new CustomEvent('screenShow', { detail: { screenId } }));
     }
 }
 
@@ -144,6 +147,11 @@ document.addEventListener('DOMContentLoaded', async () => {
         'chat': 'chat-screen',
         'settings': 'settings-screen',
         'paywall': 'paywall-screen',
+        'relationship': 'relationship-screen',
+        'goals': 'goals-screen',
+        'mood': 'mood-screen',
+        'games': 'games-screen',
+        'date': 'date-screen',
     };
     
     const screenId = screenMap[pageKey];
