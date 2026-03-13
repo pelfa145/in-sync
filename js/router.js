@@ -30,7 +30,13 @@ function navigateTo(page, params = {}) {
     const pageKey = page.replace('.html', '');
     const screenId = pageKey + (pageKey.endsWith('-screen') ? '' : '-screen');
 
-    // If the screen exists in the DOM, just show it
+    // If we're on home.html and navigating to home, just show the screen
+    if (currentPage === 'home.html' && pageKey === 'home') {
+        showScreen('home-screen');
+        return;
+    }
+
+    // If screen exists in the DOM, just show it
     if (document.getElementById(screenId)) {
         showScreen(screenId);
         return;
