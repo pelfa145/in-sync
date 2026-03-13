@@ -389,7 +389,8 @@ function subscribeGoals(userId, partnerId, callback) {
         query = supabaseClient
             .from('goals')
             .select('*')
-            .or(`(user_id.eq.${userId},partner_id.eq.${userId}), (user_id.eq.${partnerId},partner_id.eq.${partnerId})`)
+            .or(`user_id.eq.${userId},partner_id.eq.${userId}`)
+            .or(`user_id.eq.${partnerId},partner_id.eq.${partnerId}`)
             .order('created_at', { ascending: false });
     }
 
@@ -475,7 +476,8 @@ function subscribeMoodEntries(userId, partnerId, callback) {
         query = supabaseClient
             .from('mood_entries')
             .select('*')
-            .or(`(user_id.eq.${userId},partner_id.eq.${userId}), (user_id.eq.${partnerId},partner_id.eq.${partnerId})`)
+            .or(`user_id.eq.${userId},partner_id.eq.${userId}`)
+            .or(`user_id.eq.${partnerId},partner_id.eq.${partnerId}`)
             .order('created_at', { ascending: false });
     }
 

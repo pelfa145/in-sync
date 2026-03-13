@@ -70,6 +70,12 @@
             <header class="chat-header">
                 <button class="back-btn" id="chat-back">←</button>
                 <h1 class="chat-title">Chat</h1>
+                <button class="scroll-to-newest-btn" id="scroll-to-newest-btn" title="Scroll to newest">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M7 10l5 5 5-5"/>
+                        <path d="M12 15V3"/>
+                    </svg>
+                </button>
             </header>
             <div class="no-partner-chat" id="no-partner-chat">
                 <span class="empty-icon">💬</span>
@@ -77,6 +83,12 @@
                 <p class="empty-text">Pair with your partner to start chatting and sharing memories together.</p>
             </div>
             <div class="chat-messages hidden" id="chat-messages"></div>
+            <button class="scroll-to-bottom-fab hidden" id="scroll-to-bottom-fab" title="Scroll to newest">
+                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M7 10l5 5 5-5"/>
+                    <path d="M12 15V3"/>
+                </svg>
+            </button>
             <div class="chat-input-area hidden" id="chat-input-area">
                 <div class="chat-input-container">
                     <textarea id="chat-input" class="chat-input" placeholder="Type a message..." rows="1"></textarea>

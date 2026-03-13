@@ -4,10 +4,21 @@ function initChat() {
     const chatBack = document.getElementById('chat-back');
     const sendBtn = document.getElementById('send-btn');
     const chatInput = document.getElementById('chat-input');
+    const scrollToNewestBtn = document.getElementById('scroll-to-newest-btn');
+    const scrollToBottomFab = document.getElementById('scroll-to-bottom-fab');
 
     if (!chatBack) return;
 
     chatBack.addEventListener('click', () => navigateTo('home'));
+
+    // Add scroll to newest functionality
+    if (scrollToNewestBtn) {
+        scrollToNewestBtn.addEventListener('click', scrollToNewestMessages);
+    }
+    
+    if (scrollToBottomFab) {
+        scrollToBottomFab.addEventListener('click', scrollToNewestMessages);
+    }
 
     if (!AppState.partner && !AppState.currentUser?.partnerId) {
         document.getElementById('no-partner-chat').classList.remove('hidden');
@@ -43,6 +54,9 @@ function initChat() {
         });
     }
 
+    // Set up scroll listener for floating button
+    setupScrollListener();
+
     // Set up MutationObserver for auto-scroll
     setupAutoScrollObserver();
 
@@ -50,6 +64,29 @@ function initChat() {
 }
 
 let autoScrollObserver = null;
+
+function setupScrollListener() {
+    const chatMessages = document.getElementById('chat-messages');
+    const scrollToBottomFab = document.getElementById('scroll-to-bottom-fab');
+    
+    if (!chatMessages || !scrollToBottomFab) return;
+    
+    const checkScrollPosition = () => {
+        const isAtBottom = chatMessages.scrollHeight - chatMessages.scrollTop <= chatMessages.clientHeight + 50;
+        
+        if (isAtBottom) {
+            scrollToBottomFab.classList.add('hidden');
+        } else {
+            scrollToBottomFab.classList.remove('hidden');
+        }
+    };
+    
+    // Initial check
+    checkScrollPosition();
+    
+    // Listen for scroll events
+    chatMessages.addEventListener('scroll', checkScrollPosition, { passive: true });
+}
 
 function setupAutoScrollObserver() {
     const container = document.getElementById('chat-messages');
@@ -239,6 +276,17 @@ async function handleSend() {
     } catch (e) {
         console.error('Chat: send failed', e);
         alert('Failed to send message');
+    }
+}
+
+function scrollToNewestMessages() {
+    const chatMessages = document.getElementById('chat-messages');
+    if (chatMessages) {
+        chatMessages.scrollTo({
+            top: chatMessages.scrollHeight,
+            left: 0,
+            behavior: 'smooth'
+        });
     }
 }
 
