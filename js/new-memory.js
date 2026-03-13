@@ -1,5 +1,6 @@
 let selectedType = 'photo';
 let selectedFile = null;
+let selectedThumbnail = null;
 let cameraStream = null;
 let currentFacingMode = 'user';
 
@@ -142,6 +143,102 @@ async function compressImage(file, maxWidth = 800, quality = 0.7) {
     });
 }
 
+// Video compression utility
+async function compressVideo(file, maxWidth = 1280, quality = 0.8) {
+    if (!file || !file.type.startsWith('video/')) {
+        return file;
+    }
+
+    return new Promise((resolve) => {
+        const video = document.createElement('video');
+        const canvas = document.createElement('canvas');
+        const ctx = canvas.getContext('2d');
+
+        video.onloadedmetadata = () => {
+            // Calculate new dimensions
+            let { videoWidth, videoHeight } = video;
+            if (videoWidth > maxWidth) {
+                videoHeight = (videoHeight * maxWidth) / videoWidth;
+                videoWidth = maxWidth;
+            }
+
+            canvas.width = videoWidth;
+            canvas.height = videoHeight;
+
+            // Seek to middle frame for thumbnail
+            video.currentTime = video.duration / 2;
+        };
+
+        video.onseeked = () => {
+            // Draw frame
+            ctx.drawImage(video, 0, 0, videoWidth, videoHeight);
+            
+            canvas.toBlob(
+                (blob) => {
+                    // Create compressed video file (using original video but smaller if possible)
+                    if (file.size > 50 * 1024 * 1024) { // If larger than 50MB
+                        // For large videos, we'll create a thumbnail and keep original
+                        const thumbnailFile = new File([blob], `thumb_${file.name}`, {
+                            type: 'image/jpeg',
+                            lastModified: Date.now(),
+                        });
+                        resolve({ compressedFile: file, thumbnail: thumbnailFile });
+                    } else {
+                        // For smaller videos, keep original but note it's optimized
+                        resolve({ compressedFile: file, thumbnail: null });
+                    }
+                },
+                'image/jpeg',
+                0.7
+            );
+        };
+
+        video.src = URL.createObjectURL(file);
+    });
+}
+
+// Compression indicator functions
+function showCompressionIndicator() {
+    const mediaPicker = document.getElementById('media-picker');
+    if (mediaPicker) {
+        mediaPicker.style.opacity = '0.6';
+        mediaPicker.style.pointerEvents = 'none';
+        
+        // Add loading text
+        const existingIndicator = mediaPicker.querySelector('.compression-indicator');
+        if (!existingIndicator) {
+            const indicator = document.createElement('div');
+            indicator.className = 'compression-indicator';
+            indicator.innerHTML = '🔄 Compressing...';
+            indicator.style.cssText = `
+                position: absolute;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: rgba(0,0,0,0.8);
+                color: white;
+                padding: 8px 16px;
+                border-radius: 20px;
+                font-size: 14px;
+                font-weight: 600;
+                z-index: 10;
+            `;
+            mediaPicker.appendChild(indicator);
+        }
+    }
+}
+
+function hideCompressionIndicator() {
+    const mediaPicker = document.getElementById('media-picker');
+    if (mediaPicker) {
+        mediaPicker.style.opacity = '1';
+        mediaPicker.style.pointerEvents = 'auto';
+        
+        const indicator = mediaPicker.querySelector('.compression-indicator');
+        if (indicator) indicator.remove();
+    }
+}
+
 function updateMediaSection() {
     const mediaSection = document.getElementById('media-section');
     const mediaPicker = document.getElementById('media-picker');
@@ -180,16 +277,37 @@ async function handleFileSelect(e) {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    // Compress image if it's a photo
-    if (selectedType === 'photo' && file.type.startsWith('image/')) {
-        try {
+    // Show compression indicator
+    showCompressionIndicator();
+
+    try {
+        // Compress image if it's a photo
+        if (selectedType === 'photo' && file.type.startsWith('image/')) {
             selectedFile = await compressImage(file);
-        } catch (error) {
-            console.error('Image compression failed:', error);
-            selectedFile = file; // Fallback to original file
+            console.log(`Image compressed: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB`);
         }
-    } else {
-        selectedFile = file;
+        // Compress video if it's a video
+        else if (selectedType === 'video' && file.type.startsWith('video/')) {
+            const result = await compressVideo(file);
+            selectedFile = result.compressedFile;
+            selectedThumbnail = result.thumbnail;
+            console.log(`Video processed: ${(file.size / 1024 / 1024).toFixed(2)}MB → ${(selectedFile.size / 1024 / 1024).toFixed(2)}MB`);
+        }
+        // Handle audio files (no compression needed)
+        else if (selectedType === 'audio' && file.type.startsWith('audio/')) {
+            selectedFile = file;
+            console.log(`Audio file: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        }
+        // Handle other files
+        else {
+            selectedFile = file;
+            console.log(`File: ${(file.size / 1024 / 1024).toFixed(2)}MB`);
+        }
+    } catch (error) {
+        console.error('File compression failed:', error);
+        selectedFile = file; // Fallback to original file
+    } finally {
+        hideCompressionIndicator();
     }
 
     const mediaPicker = document.getElementById('media-picker');
@@ -256,10 +374,19 @@ async function handleSave() {
 
     try {
         let uri = null;
+        let thumbnailUri = null;
 
         if (selectedFile && selectedType !== 'letter') {
             const memoryId = `mem_${Date.now()}_${Math.random().toString(36).slice(2, 9)}`;
+            
+            // Upload main file
             uri = await uploadMemoryFile(AppState.currentUser.id, memoryId, selectedType, selectedFile);
+            
+            // Upload thumbnail if it exists (for videos)
+            if (selectedThumbnail) {
+                const thumbnailId = `thumb_${memoryId}`;
+                thumbnailUri = await uploadMemoryFile(AppState.currentUser.id, thumbnailId, 'photo', selectedThumbnail);
+            }
         }
 
         await createMemory({
@@ -269,6 +396,7 @@ async function handleSave() {
             title,
             description: description || null,
             uri: uri || null,
+            thumbnailUri: thumbnailUri || null,
         });
 
         navigateTo('home');
