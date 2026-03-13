@@ -1,5 +1,9 @@
-const CACHE_NAME = 'in-sync-v3';
-const ASSETS_TO_CACHE = [
+const CACHE_NAME = 'in-sync-v4';
+const STATIC_CACHE = 'in-sync-static-v4';
+const DYNAMIC_CACHE = 'in-sync-dynamic-v4';
+
+// Core assets that should always be cached
+const STATIC_ASSETS = [
   './',
   'index.html',
   'home.html',
@@ -8,22 +12,30 @@ const ASSETS_TO_CACHE = [
   'js/supabase.js',
   'js/router.js',
   'js/app.js',
+  'js/cache.js',
+  'js/module-loader.js',
+  'icon-500.png'
+];
+
+// Dynamic assets that can be cached on demand
+const DYNAMIC_ASSETS = [
   'js/home.js',
   'js/pairing.js',
   'js/chat.js',
   'js/settings.js',
   'js/new-memory.js',
-  'js/cache.js',
-  'icon-500.png'
+  'js/relationship.js',
+  'js/notifications.js'
 ];
 
 // Force update on install
 self.addEventListener('install', (event) => {
   self.skipWaiting(); // Skip waiting to activate immediately
   event.waitUntil(
-    caches.open(CACHE_NAME).then((cache) => {
-      return cache.addAll(ASSETS_TO_CACHE);
-    })
+    Promise.all([
+      caches.open(STATIC_CACHE).then((cache) => cache.addAll(STATIC_ASSETS)),
+      caches.open(DYNAMIC_CACHE)
+    ])
   );
 });
 
@@ -33,7 +45,7 @@ self.addEventListener('activate', (event) => {
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames.map((cacheName) => {
-          if (cacheName !== CACHE_NAME) {
+          if (cacheName !== STATIC_CACHE && cacheName !== DYNAMIC_CACHE) {
             return caches.delete(cacheName);
           }
         })
@@ -110,26 +122,88 @@ self.addEventListener('notificationclick', (event) => {
   );
 });
 
-// Network First, fallback to cache
+// Optimized fetch strategy
 self.addEventListener('fetch', (event) => {
-  // Only handle GET requests
-  if (event.request.method !== 'GET') return;
+  const { request } = event;
+  const url = new URL(request.url);
 
-  event.respondWith(
-    fetch(event.request)
-      .then((response) => {
-        // If successful response, clone it and save to cache
-        if (response && response.status === 200) {
-          const responseToCache = response.clone();
-          caches.open(CACHE_NAME).then((cache) => {
-            cache.put(event.request, responseToCache);
-          });
-        }
-        return response;
-      })
-      .catch(() => {
-        // If network fails, return from cache
-        return caches.match(event.request);
-      })
-  );
+  // Only handle GET requests
+  if (request.method !== 'GET') return;
+
+  // Skip external requests
+  if (url.origin !== self.location.origin) return;
+
+  // Strategy based on request type
+  if (STATIC_ASSETS.some(asset => request.url.includes(asset))) {
+    // Cache First for static assets
+    event.respondWith(cacheFirst(request, STATIC_CACHE));
+  } else if (DYNAMIC_ASSETS.some(asset => request.url.includes(asset))) {
+    // Stale While Revalidate for dynamic assets
+    event.respondWith(staleWhileRevalidate(request, DYNAMIC_CACHE));
+  } else if (request.url.includes('supabase')) {
+    // Network First for API calls
+    event.respondWith(networkFirst(request, DYNAMIC_CACHE));
+  } else {
+    // Network First with cache fallback for everything else
+    event.respondWith(networkFirst(request, DYNAMIC_CACHE));
+  }
 });
+
+// Cache strategies
+async function cacheFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  
+  if (cached) {
+    return cached;
+  }
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    return new Response('Offline', { status: 503 });
+  }
+}
+
+async function staleWhileRevalidate(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  const cached = await cache.match(request);
+  
+  // Always try to fetch in background
+  const fetchPromise = fetch(request).then(response => {
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  });
+  
+  // Return cached version immediately if available
+  if (cached) {
+    return cached;
+  }
+  
+  // Otherwise wait for network
+  return fetchPromise;
+}
+
+async function networkFirst(request, cacheName) {
+  const cache = await caches.open(cacheName);
+  
+  try {
+    const response = await fetch(request);
+    if (response.ok) {
+      cache.put(request, response.clone());
+    }
+    return response;
+  } catch (error) {
+    const cached = await cache.match(request);
+    if (cached) {
+      return cached;
+    }
+    return new Response('Offline', { status: 503 });
+  }
+}

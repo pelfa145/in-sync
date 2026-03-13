@@ -1,6 +1,15 @@
 let memoriesUnsubscribe = null;
 let commentsUnsubscribe = null;
 let activeMemoryId = null;
+let virtualScrollState = {
+    visibleItems: [],
+    startIndex: 0,
+    endIndex: 0,
+    itemHeight: 280,
+    visibleHeight: 0,
+    scrollTop: 0,
+    totalHeight: 0
+};
 
 function initHome() {
     const menuBtn = document.getElementById('menu-btn');
@@ -104,21 +113,112 @@ function renderMemories() {
     }
 
     emptyState.classList.add('hidden');
+    
+    // Initialize virtual scrolling (will handle small vs large lists)
+    initVirtualScroll(container);
+    
+    // Update scroll state
+    if (AppState.memories.length > 10) {
+        updateVirtualScroll();
+    }
+}
+
+function initVirtualScroll(container) {
+    // Calculate available height more accurately
+    const headerHeight = document.querySelector('.home-header')?.offsetHeight || 200;
+    const fabHeight = 80; // Approximate FAB height + spacing
+    const availableHeight = window.innerHeight - headerHeight - fabHeight - 40; // Extra padding
+    
+    virtualScrollState.visibleHeight = Math.max(availableHeight, 400);
+    virtualScrollState.totalHeight = AppState.memories.length * virtualScrollState.itemHeight;
+    
+    // Reset container styles first
+    container.style.height = '';
+    container.style.overflowY = '';
+    container.style.position = '';
+    
+    // Only apply virtual scrolling if there are many memories
+    if (AppState.memories.length > 10) {
+        container.style.height = `${virtualScrollState.visibleHeight}px`;
+        container.style.overflowY = 'auto';
+        container.style.position = 'relative';
+        
+        // Create spacer div for total height
+        if (!container.querySelector('.virtual-spacer')) {
+            const spacer = document.createElement('div');
+            spacer.className = 'virtual-spacer';
+            spacer.style.height = `${virtualScrollState.totalHeight}px`;
+            spacer.style.position = 'absolute';
+            spacer.style.top = '0';
+            spacer.style.left = '0';
+            spacer.style.right = '0';
+            spacer.style.pointerEvents = 'none';
+            container.appendChild(spacer);
+        } else {
+            container.querySelector('.virtual-spacer').style.height = `${virtualScrollState.totalHeight}px`;
+        }
+        
+        // Add scroll listener
+        container.removeEventListener('scroll', handleVirtualScroll);
+        container.addEventListener('scroll', handleVirtualScroll, { passive: true });
+    } else {
+        // For small lists, use normal scrolling
+        const spacer = container.querySelector('.virtual-spacer');
+        if (spacer) spacer.remove();
+        container.removeEventListener('scroll', handleVirtualScroll);
+        renderNormalMemories();
+    }
+}
+
+function handleVirtualScroll(e) {
+    const container = e.target;
+    virtualScrollState.scrollTop = container.scrollTop;
+    updateVirtualScroll();
+}
+
+function updateVirtualScroll() {
+    const { scrollTop, visibleHeight, itemHeight } = virtualScrollState;
+    const totalItems = AppState.memories.length;
+    
+    // Calculate visible range
+    const startIndex = Math.floor(scrollTop / itemHeight);
+    const endIndex = Math.min(
+        startIndex + Math.ceil(visibleHeight / itemHeight) + 2, // Buffer for smooth scrolling
+        totalItems - 1
+    );
+    
+    // Only update if range changed
+    if (startIndex === virtualScrollState.startIndex && endIndex === virtualScrollState.endIndex) {
+        return;
+    }
+    
+    virtualScrollState.startIndex = startIndex;
+    virtualScrollState.endIndex = endIndex;
+    
+    // Render visible items
+    renderVisibleItems();
+}
+
+function renderNormalMemories() {
+    const container = document.getElementById('memories-list');
+    if (!container) return;
+    
+    // Clear existing content
+    container.innerHTML = '';
+    container.querySelectorAll('.virtual-item').forEach(item => item.remove());
+    
+    // Render all memories normally
     container.innerHTML = AppState.memories.map(memory => renderMemoryCard(memory)).join('');
-
-    // Setup lazy loading for images
-    setupLazyLoading();
-
+    
+    // Setup event listeners
     container.querySelectorAll('.card').forEach(card => {
-        card.addEventListener('click', () => {
-            const memoryId = card.dataset.id;
-            const memory = AppState.memories.find(m => m.id === memoryId);
-            if (memory) {
-                openMemoryModal(memory);
-            }
-        });
+        const memoryId = card.dataset.id;
+        const memory = AppState.memories.find(m => m.id === memoryId);
+        if (memory) {
+            card.addEventListener('click', () => openMemoryModal(memory));
+        }
     });
-
+    
     container.querySelectorAll('.delete-btn').forEach(btn => {
         btn.addEventListener('click', async (e) => {
             e.stopPropagation();
@@ -128,6 +228,53 @@ function renderMemories() {
             }
         });
     });
+    
+    // Setup lazy loading
+    setupLazyLoading();
+}
+
+function renderVisibleItems() {
+    const container = document.getElementById('memories-list');
+    const { startIndex, endIndex, itemHeight } = virtualScrollState;
+    
+    // Remove existing items
+    container.querySelectorAll('.virtual-item').forEach(item => item.remove());
+    
+    // Render visible items
+    for (let i = startIndex; i <= endIndex; i++) {
+        const memory = AppState.memories[i];
+        if (!memory) continue;
+        
+        const itemDiv = document.createElement('div');
+        itemDiv.className = 'virtual-item';
+        itemDiv.style.position = 'absolute';
+        itemDiv.style.top = `${i * itemHeight}px`;
+        itemDiv.style.left = '0';
+        itemDiv.style.right = '0';
+        itemDiv.style.height = `${itemHeight}px`;
+        itemDiv.innerHTML = renderMemoryCard(memory);
+        
+        // Add event listeners
+        const card = itemDiv.querySelector('.card');
+        if (card) {
+            card.addEventListener('click', () => openMemoryModal(memory));
+        }
+        
+        const deleteBtn = itemDiv.querySelector('.delete-btn');
+        if (deleteBtn) {
+            deleteBtn.addEventListener('click', async (e) => {
+                e.stopPropagation();
+                if (confirm('Delete this memory?')) {
+                    await deleteMemory(memory.id, AppState.currentUser.id);
+                }
+            });
+        }
+        
+        container.appendChild(itemDiv);
+    }
+    
+    // Setup lazy loading for visible images
+    setupLazyLoading();
 }
 
 function renderMemoryCard(memory) {

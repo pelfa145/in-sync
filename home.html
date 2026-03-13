@@ -499,10 +499,30 @@
     <script src="js/notifications.js"></script>
     <script src="js/supabase.js"></script>
     <script src="js/router.js"></script>
+    <script src="js/module-loader.js"></script>
     <script src="js/home.js"></script>
-    <script src="js/chat.js"></script>
+    <script>
+        // Lazy load other modules
+        window.addEventListener('DOMContentLoaded', () => {
+            // Preload critical modules
+            window.preloadCriticalModules();
+            
+            // Load chat module when messages button is clicked
+            document.getElementById('messages-btn')?.addEventListener('click', () => {
+                window.loadChatModule();
+            });
+            
+            // Load settings module when menu is clicked
+            document.getElementById('menu-btn')?.addEventListener('click', () => {
+                window.loadSettingsModule();
+            });
+            
+            // Load relationship module when couple button is clicked
+            document.getElementById('relationship-btn')?.addEventListener('click', () => {
+                window.loadRelationshipModule();
+            });
+        });
+    </script>
     <script src="js/new-memory.js"></script>
-    <script src="js/settings.js"></script>
-    <script src="js/relationship.js"></script>
 </body>
 </html>
