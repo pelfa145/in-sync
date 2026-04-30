@@ -1,75 +1,184 @@
-# Couples Memories
+# In-Sync — Couples PWA
 
-A React Native (Expo) app for couples to share photos, videos, voice memos, letters, and songs. Includes account system, partner pairing, and chat.
+A Progressive Web Application for couples to stay connected. Share memories, chat in real-time, track moods, set shared goals, and maintain your relationship timeline — all synced across devices.
 
 ## Features
 
-- **Account system**: Sign up / sign in with email and password (Firebase Auth)
-- **Partner pairing**: Share a code to link accounts
-- **Memories**: Add photos, videos, voice memos, letters, and songs
-- **Compression**: All media is compressed before upload to minimize storage
-- **Chat**: 1:1 messaging between partners
+### Pairing System
+- Create an account and get a unique 6-character pairing code
+- Share your code with your partner to link accounts
+- Both users see shared content in real-time
 
-## Setup
+### Shared Memories
+- Upload photos, videos, and text memories
+- Memories are shared between both partners
+- Add comments to each other's posts
+- Chronological timeline view
 
-### 1. Firebase
+### Real-Time Chat
+- 1:1 messaging between partners
+- Messages sync instantly via Supabase subscriptions
+- Conversation history persists across sessions
 
-1. Create a project at [Firebase Console](https://console.firebase.google.com)
-2. Enable **Authentication** (Email/Password sign-in)
-3. Create a **Firestore Database**
-4. Create a **Storage** bucket
-5. Add an Android app and copy the config
-6. Edit `src/config/firebase.ts` and replace the placeholder values:
+### Mood Tracking
+- Log daily moods with optional notes
+- View your partner's mood entries
+- Emotional awareness and support
 
-```ts
-const firebaseConfig = {
-  apiKey: 'YOUR_API_KEY',
-  authDomain: 'YOUR_PROJECT_ID.firebaseapp.com',
-  projectId: 'YOUR_PROJECT_ID',
-  storageBucket: 'YOUR_PROJECT_ID.appspot.com',
-  messagingSenderId: 'YOUR_MESSAGING_SENDER_ID',
-  appId: 'YOUR_APP_ID',
-};
+### Shared Goals
+- Create relationship goals together
+- Track completion status
+- Mark goals as done collaboratively
+
+### Relationship Milestones
+- Track your relationship duration
+- Anniversary counter and milestone display
+
+### Customization
+- 5 built-in themes: Cherry Blossom, Baby Pink, Ocean Breeze, Mint Leaf, Lavender Night
+- Personalize the app's appearance to your taste
+
+### PWA Support
+- Installable on any device
+- Offline caching for core functionality
+- Responsive mobile-first design
+
+## Tech Stack
+
+- **HTML5**, **CSS3**, **Vanilla JavaScript** (ES6+)
+- **Supabase** — Authentication, Database (PostgreSQL), Storage, Real-time subscriptions
+- **Service Worker** — Offline support and caching
+- **Web Notifications API** — Push alerts for messages
+
+## Quick Start
+
+### 1. Set Up Supabase
+
+1. Create a project at [Supabase](https://supabase.com)
+2. Create the following tables in your database:
+
+```sql
+-- Profiles
+CREATE TABLE profiles (
+  id UUID REFERENCES auth.users PRIMARY KEY,
+  email TEXT NOT NULL,
+  name TEXT NOT NULL,
+  pair_code TEXT UNIQUE NOT NULL,
+  partner_id UUID REFERENCES profiles(id)
+);
+
+-- Memories
+CREATE TABLE memories (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  partner_id UUID REFERENCES profiles(id) NOT NULL,
+  type TEXT NOT NULL,
+  title TEXT,
+  description TEXT,
+  uri TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Messages
+CREATE TABLE messages (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  from_user_id UUID REFERENCES profiles(id) NOT NULL,
+  to_user_id UUID REFERENCES profiles(id) NOT NULL,
+  text TEXT NOT NULL,
+  conversation_id TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Memory Comments
+CREATE TABLE memory_comments (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  memory_id UUID REFERENCES memories(id) NOT NULL,
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  text TEXT NOT NULL,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Goals
+CREATE TABLE goals (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  partner_id UUID REFERENCES profiles(id) NOT NULL,
+  text TEXT NOT NULL,
+  completed BOOLEAN DEFAULT false,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
+
+-- Mood Entries
+CREATE TABLE mood_entries (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES profiles(id) NOT NULL,
+  partner_id UUID REFERENCES profiles(id) NOT NULL,
+  mood TEXT NOT NULL,
+  note TEXT,
+  created_at TIMESTAMPTZ DEFAULT NOW()
+);
 ```
 
-7. Deploy Firestore indexes (optional, Firebase will prompt when needed):
+3. Create a Storage bucket named `memories`
+4. Set up Row Level Security (RLS) policies for each table
+
+### 2. Configure the App
+
+Edit `js/supabase.js` and replace the Supabase URL and anon key with your own:
+
+```js
+const supabaseUrl = 'YOUR_SUPABASE_URL';
+const supabaseAnonKey = 'YOUR_SUPABASE_ANON_KEY';
+```
+
+### 3. Run Locally
+
+Serve the files with any static server:
 
 ```bash
-firebase deploy --only firestore:indexes
+npx serve .
 ```
 
-### 2. Assets
+Open `http://localhost:3000` in your browser.
 
-Add `assets/icon.png` (1024×1024) and `assets/splash.png` for your app icon and splash screen. Or remove/update these in `app.json`.
+### 4. Deploy
 
-### 3. Install and run
+This is a **static PWA** — deploy anywhere:
 
-```bash
-npm install
-npx expo start
+1. Push to GitHub
+2. Enable **GitHub Pages** (Settings > Pages)
+3. Select `main` branch as source
+
+## Project Structure
+
+```
+in-sync-main/
+├── index.html          # Auth screen entry point
+├── home.html           # Main app home (memories feed)
+├── pairing.html        # Partner pairing screen
+├── paywall.html        # Premium features screen
+├── manifest.json       # PWA manifest
+├── sw.js               # Service worker
+├── icon-500.png        # App icon
+├── css/
+│   └── style.css       # All styles with theme variables
+├── js/
+│   ├── supabase.js     # Supabase client & all DB functions
+│   ├── app.js          # Auth logic
+│   ├── router.js       # Screen navigation
+│   ├── home.js         # Home feed rendering
+│   ├── chat.js         # Real-time messaging
+│   ├── pairing.js      # Partner pairing logic
+│   ├── new-memory.js   # Memory creation
+│   ├── relationship.js # Relationship/milestone logic
+│   ├── settings.js     # User settings & themes
+│   ├── goals.js        # Shared goals management
+│   ├── notifications.js# Push notification handling
+│   ├── cache.js        # Service worker cache config
+│   └── module-loader.js# Dynamic screen loading
+└── README.md
 ```
 
-Press `a` for Android or `i` for iOS.
+---
 
-### 4. Build APK
-
-For a production APK, use [EAS Build](https://docs.expo.dev/build/introduction/):
-
-```bash
-npx eas build --platform android --profile preview
-```
-
-## Compression
-
-- **Photos**: Resized to max 1200px, compressed (JPEG ~80% quality)
-- **Videos**: Auto compression (WhatsApp-style)
-- **Audio**: Compressed before upload
-
-## Tech stack
-
-- Expo SDK 52
-- React Navigation
-- Firebase (Auth, Firestore, Storage)
-- expo-image-picker, expo-document-picker, expo-av
-- react-native-compressor
-- expo-image-manipulator
+**In-Sync** — Stay connected, always.
